@@ -1,11 +1,13 @@
-package nu.ygge.nes;
+package nu.ygge.nes.cpu;
 
 import lombok.Getter;
 import lombok.Setter;
 
 public class CPU {
 
-    private final byte[] programCounter = new byte[2];
+    @Getter
+    @Setter
+    private int programCounter;
     @Getter
     @Setter
     private short accumulator, registerX, registerY, stackPointer;
