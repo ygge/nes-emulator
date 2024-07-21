@@ -8,7 +8,7 @@ public enum Instruction {
     CLC("Clear carry flag", runtime -> runtime.getCpu().clearStatusCarry()),
     CLV("Clear overflow flag", runtime -> runtime.getCpu().clearStatusOverflow()),
     SEI("Set interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt()),
-    CLI("Clear interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt()),
+    CLI("Clear interrupt disable flag", runtime -> runtime.getCpu().clearStatusInterrupt()),
     SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),
     CLD("Clear decimal mode", runtime -> runtime.getCpu().clearStatusDecimal());
 
