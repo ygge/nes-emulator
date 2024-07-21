@@ -12,6 +12,10 @@ public class Runtime_LDATest {
     @BeforeEach
     void setUp() {
         runtime = new Runtime();
+        byte dummyValue = 0x17;
+        for (int i = 0; i < 2048; ++i) {
+            runtime.getRam().write(i, dummyValue);
+        }
     }
 
     @Test
@@ -42,6 +46,104 @@ public class Runtime_LDATest {
         Assertions.assertEquals(4, runtime.getCpu().getCycles());
         Assertions.assertFalse(runtime.getCpu().isStatusNegative());
         Assertions.assertTrue(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyZeroPageAddressingMode() {
+        runtime.getCpu().setStatusZero();
+        runtime.getRam().write(1, (byte)2);
+        runtime.getRam().write(2, (byte)0xFF);
+
+        runSingleImmediateOperation(OpCodes.LDAZ);
+
+        Assertions.assertEquals((byte)0xFF, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(3, runtime.getCpu().getCycles());
+        Assertions.assertTrue(runtime.getCpu().isStatusNegative());
+        Assertions.assertFalse(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyZeroPageXAddressingMode() {
+        runtime.getCpu().setStatusNegative();
+        runtime.getCpu().setRegisterX((byte)0xFF);
+        runtime.getRam().write(1, (byte)3);
+        runtime.getRam().write(2, (byte)0xFF);
+
+        runSingleImmediateOperation(OpCodes.LDAZX);
+
+        Assertions.assertEquals((byte)0xFF, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(4, runtime.getCpu().getCycles());
+        Assertions.assertTrue(runtime.getCpu().isStatusNegative());
+        Assertions.assertFalse(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyAbsoluteXAddressingMode() {
+        runtime.getCpu().setRegisterX((byte)1);
+        runtime.getCpu().setStatusNegative();
+        runtime.getRam().write(1, (byte)0);
+        runtime.getRam().write(2, (byte)0);
+
+        runSingleImmediateOperation(OpCodes.LDAX);
+
+        Assertions.assertEquals((byte)0, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(4, runtime.getCpu().getCycles());
+        Assertions.assertFalse(runtime.getCpu().isStatusNegative());
+        Assertions.assertTrue(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyAbsoluteYAddressingMode() {
+        runtime.getCpu().setRegisterY((byte)1);
+        runtime.getCpu().setStatusNegative();
+        runtime.getRam().write(1, (byte)0);
+        runtime.getRam().write(2, (byte)0);
+
+        runSingleImmediateOperation(OpCodes.LDAY);
+
+        Assertions.assertEquals((byte)0, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(4, runtime.getCpu().getCycles());
+        Assertions.assertFalse(runtime.getCpu().isStatusNegative());
+        Assertions.assertTrue(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyIndirectXAddressingMode() {
+        runtime.getCpu().setRegisterX((byte)1);
+        runtime.getCpu().setStatusNegative();
+        runtime.getRam().write(1, (byte)2);
+        runtime.getRam().write(3, (byte)4);
+        runtime.getRam().write(4, (byte)0);
+
+        runSingleImmediateOperation(OpCodes.LDAIX);
+
+        Assertions.assertEquals((byte)0, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(6, runtime.getCpu().getCycles());
+        Assertions.assertFalse(runtime.getCpu().isStatusNegative());
+        Assertions.assertTrue(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyIndirectYAddressingMode() {
+        runtime.getCpu().setRegisterY((byte)0xFF);
+        runtime.getCpu().setStatusZero();
+        runtime.getRam().write(1, (byte)2);
+        runtime.getRam().write(2, (byte)2);
+        runtime.getRam().write(3, (byte)1);
+        runtime.getRam().write(0x201, (byte)0xFE);
+
+        runSingleImmediateOperation(OpCodes.LDAIY);
+
+        Assertions.assertEquals((byte)0xFE, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(5, runtime.getCpu().getCycles());
+        Assertions.assertTrue(runtime.getCpu().isStatusNegative());
+        Assertions.assertFalse(runtime.getCpu().isStatusZero());
     }
 
     private void runSingleImmediateOperation(OpCodes opCode) {

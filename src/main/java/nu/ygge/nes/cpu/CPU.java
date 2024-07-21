@@ -11,7 +11,7 @@ public class CPU {
     private int programCounter;
     @Getter
     @Setter
-    private short accumulator, registerX, registerY, stackPointer;
+    private byte accumulator, registerX, registerY, stackPointer;
     private short statusRegister;
 
     @Getter
