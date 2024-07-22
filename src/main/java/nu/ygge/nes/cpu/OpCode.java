@@ -31,42 +31,42 @@ public class OpCode {
         if (addressingMode == AddressingMode.Implied || addressingMode == AddressingMode.Accumulator) {
             instruction.getNoArgumentInstruction().perform(runtime);
         } else if (addressingMode == AddressingMode.Immediate) {
-            instruction.getSingleArgumentInstruction().perform(runtime, eb1);
-            setStatusFlags(runtime.getCpu(), eb1);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, eb1);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.Absolute) {
             byte value = runtime.getMemory().read(toAddress(eb1, eb2));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.ZeroPage) {
             byte value = runtime.getMemory().read(toAddress((byte)0, eb1));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.ZeroPageX) {
             byte value = runtime.getMemory().read(toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.AbsoluteX) {
             byte value = runtime.getMemory().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX()));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.AbsoluteY) {
             byte value = runtime.getMemory().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterY()));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
             byte value = runtime.getMemory().read(toAddress(value2, value1));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.IndirectY) {
             int address = toZeroPageAddress(eb1, (byte)0);
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
             byte value = runtime.getMemory().read(toAddress(value2, value1) + toInt(runtime.getCpu().getRegisterY()));
-            instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), value);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
         } else {
             throw new UnsupportedOperationException("Addressing mode not supported: " + addressingMode);
         }

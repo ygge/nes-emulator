@@ -8,7 +8,7 @@ public enum Instruction {
     CLD("Clear decimal mode", runtime -> runtime.getCpu().clearStatusDecimal()),
     CLI("Clear interrupt disable flag", runtime -> runtime.getCpu().clearStatusInterrupt()),
     CLV("Clear overflow flag", runtime -> runtime.getCpu().clearStatusOverflow()),
-    LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, (runtime, value) -> runtime.getCpu().setAccumulator(value)),
+    LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, Instructions::loadAccumulator),
     SEC("Set carry flag", runtime -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt());
