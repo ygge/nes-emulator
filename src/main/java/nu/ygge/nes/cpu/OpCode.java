@@ -28,47 +28,73 @@ public class OpCode {
     }
 
     public void perform(Runtime runtime, byte eb1, byte eb2) {
-        if (addressingMode == AddressingMode.Implied || addressingMode == AddressingMode.Accumulator) {
+        if (addressingMode == AddressingMode.Implied) {
             instruction.getNoArgumentInstruction().perform(runtime);
+        } else if (addressingMode == AddressingMode.Accumulator) {
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, runtime.getCpu().getAccumulator());
+            setStatusFlags(runtime.getCpu(), result);
+            if (instruction.isStoreValueBack()) {
+                runtime.getCpu().setAccumulator(result);
+            }
         } else if (addressingMode == AddressingMode.Immediate) {
             var result = instruction.getSingleArgumentInstruction().perform(runtime, eb1);
             setStatusFlags(runtime.getCpu(), result);
         } else if (addressingMode == AddressingMode.Absolute) {
-            byte value = runtime.getMemory().read(toAddress(eb1, eb2));
+            int address = toAddress(eb1, eb2);
+            byte value = runtime.getMemory().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, address, result);
         } else if (addressingMode == AddressingMode.ZeroPage) {
-            byte value = runtime.getMemory().read(toAddress((byte)0, eb1));
+            int address = toAddress((byte) 0, eb1);
+            byte value = runtime.getMemory().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, address, result);
         } else if (addressingMode == AddressingMode.ZeroPageX) {
-            byte value = runtime.getMemory().read(toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
+            int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
+            byte value = runtime.getMemory().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, address, result);
         } else if (addressingMode == AddressingMode.AbsoluteX) {
-            byte value = runtime.getMemory().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX()));
+            int address = toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX());
+            byte value = runtime.getMemory().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, address, result);
         } else if (addressingMode == AddressingMode.AbsoluteY) {
-            byte value = runtime.getMemory().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterY()));
+            int address = toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterY());
+            byte value = runtime.getMemory().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, address, result);
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
-            byte value = runtime.getMemory().read(toAddress(value2, value1));
+            int finalAddress = toAddress(value2, value1);
+            byte value = runtime.getMemory().read(finalAddress);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, finalAddress, result);
         } else if (addressingMode == AddressingMode.IndirectY) {
             int address = toZeroPageAddress(eb1, (byte)0);
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
-            byte value = runtime.getMemory().read(toAddress(value2, value1) + toInt(runtime.getCpu().getRegisterY()));
+            int finalAddress = toAddress(value2, value1) + toInt(runtime.getCpu().getRegisterY());
+            byte value = runtime.getMemory().read(finalAddress);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
+            storeValueBack(runtime, finalAddress, result);
         } else {
             throw new UnsupportedOperationException("Addressing mode not supported: " + addressingMode);
+        }
+    }
+
+    private void storeValueBack(Runtime runtime, int address, byte result) {
+        if (instruction.isStoreValueBack()) {
+            runtime.getMemory().write(address, result);
         }
     }
 
