@@ -61,7 +61,7 @@ public class Runtime_ImmediateAddressingModeTest {
     }
 
     private void runSingleImmediateOperation(OpCodes opCode) {
-        runtime.getRam().write(0, opCode.getCode());
+        runtime.getMemory().write(0, opCode.getCode());
 
         runtime.performSingleInstruction();
 

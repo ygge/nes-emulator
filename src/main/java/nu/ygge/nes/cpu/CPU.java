@@ -2,7 +2,7 @@ package nu.ygge.nes.cpu;
 
 import lombok.Getter;
 import lombok.Setter;
-import nu.ygge.nes.memory.RAM;
+import nu.ygge.nes.memory.Memory;
 
 public class CPU {
 
@@ -17,8 +17,8 @@ public class CPU {
     @Getter
     private int cycles;
 
-    public byte readInstruction(RAM ram) {
-        var value = ram.read(programCounter);
+    public byte readInstruction(Memory memory) {
+        var value = memory.read(programCounter);
         ++programCounter;
         return value;
     }

@@ -14,7 +14,7 @@ public class Runtime_LDATest {
         runtime = new Runtime();
         byte dummyValue = 0x17;
         for (int i = 0; i < 2048; ++i) {
-            runtime.getRam().write(i, dummyValue);
+            runtime.getMemory().write(i, dummyValue);
         }
     }
 
@@ -22,7 +22,7 @@ public class Runtime_LDATest {
     void verifyImmediateAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStatusZero();
-        runtime.getRam().write(1, (byte)0x42);
+        runtime.getMemory().write(1, (byte)0x42);
 
         runSingleImmediateOperation(OpCodes.LDAI);
 
@@ -36,8 +36,8 @@ public class Runtime_LDATest {
     @Test
     void verifyAbsoluteAddressingMode() {
         runtime.getCpu().setStatusNegative();
-        runtime.getRam().write(1, (byte)0);
-        runtime.getRam().write(2, (byte)1);
+        runtime.getMemory().write(1, (byte)0);
+        runtime.getMemory().write(2, (byte)1);
 
         runSingleImmediateOperation(OpCodes.LDA);
 
@@ -51,8 +51,8 @@ public class Runtime_LDATest {
     @Test
     void verifyZeroPageAddressingMode() {
         runtime.getCpu().setStatusZero();
-        runtime.getRam().write(1, (byte)2);
-        runtime.getRam().write(2, (byte)0xFF);
+        runtime.getMemory().write(1, (byte)2);
+        runtime.getMemory().write(2, (byte)0xFF);
 
         runSingleImmediateOperation(OpCodes.LDAZ);
 
@@ -67,8 +67,8 @@ public class Runtime_LDATest {
     void verifyZeroPageXAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setRegisterX((byte)0xFF);
-        runtime.getRam().write(1, (byte)3);
-        runtime.getRam().write(2, (byte)0xFF);
+        runtime.getMemory().write(1, (byte)3);
+        runtime.getMemory().write(2, (byte)0xFF);
 
         runSingleImmediateOperation(OpCodes.LDAZX);
 
@@ -83,8 +83,8 @@ public class Runtime_LDATest {
     void verifyAbsoluteXAddressingMode() {
         runtime.getCpu().setRegisterX((byte)1);
         runtime.getCpu().setStatusNegative();
-        runtime.getRam().write(1, (byte)0);
-        runtime.getRam().write(2, (byte)0);
+        runtime.getMemory().write(1, (byte)0);
+        runtime.getMemory().write(2, (byte)0);
 
         runSingleImmediateOperation(OpCodes.LDAX);
 
@@ -99,8 +99,8 @@ public class Runtime_LDATest {
     void verifyAbsoluteYAddressingMode() {
         runtime.getCpu().setRegisterY((byte)1);
         runtime.getCpu().setStatusNegative();
-        runtime.getRam().write(1, (byte)0);
-        runtime.getRam().write(2, (byte)0);
+        runtime.getMemory().write(1, (byte)0);
+        runtime.getMemory().write(2, (byte)0);
 
         runSingleImmediateOperation(OpCodes.LDAY);
 
@@ -115,9 +115,9 @@ public class Runtime_LDATest {
     void verifyIndirectXAddressingMode() {
         runtime.getCpu().setRegisterX((byte)1);
         runtime.getCpu().setStatusNegative();
-        runtime.getRam().write(1, (byte)2);
-        runtime.getRam().write(3, (byte)4);
-        runtime.getRam().write(4, (byte)0);
+        runtime.getMemory().write(1, (byte)2);
+        runtime.getMemory().write(3, (byte)4);
+        runtime.getMemory().write(4, (byte)0);
 
         runSingleImmediateOperation(OpCodes.LDAIX);
 
@@ -132,10 +132,10 @@ public class Runtime_LDATest {
     void verifyIndirectYAddressingMode() {
         runtime.getCpu().setRegisterY((byte)0xFF);
         runtime.getCpu().setStatusZero();
-        runtime.getRam().write(1, (byte)2);
-        runtime.getRam().write(2, (byte)2);
-        runtime.getRam().write(3, (byte)1);
-        runtime.getRam().write(0x201, (byte)0xFE);
+        runtime.getMemory().write(1, (byte)2);
+        runtime.getMemory().write(2, (byte)2);
+        runtime.getMemory().write(3, (byte)1);
+        runtime.getMemory().write(0x201, (byte)0xFE);
 
         runSingleImmediateOperation(OpCodes.LDAIY);
 
@@ -147,7 +147,7 @@ public class Runtime_LDATest {
     }
 
     private void runSingleImmediateOperation(OpCodes opCode) {
-        runtime.getRam().write(0, opCode.getCode());
+        runtime.getMemory().write(0, opCode.getCode());
         runtime.performSingleInstruction();
     }
 }

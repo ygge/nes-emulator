@@ -34,37 +34,37 @@ public class OpCode {
             instruction.getSingleArgumentInstruction().perform(runtime, eb1);
             setStatusFlags(runtime.getCpu(), eb1);
         } else if (addressingMode == AddressingMode.Absolute) {
-            byte value = runtime.getRam().read(toAddress(eb1, eb2));
+            byte value = runtime.getMemory().read(toAddress(eb1, eb2));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else if (addressingMode == AddressingMode.ZeroPage) {
-            byte value = runtime.getRam().read(toAddress((byte)0, eb1));
+            byte value = runtime.getMemory().read(toAddress((byte)0, eb1));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else if (addressingMode == AddressingMode.ZeroPageX) {
-            byte value = runtime.getRam().read(toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
+            byte value = runtime.getMemory().read(toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else if (addressingMode == AddressingMode.AbsoluteX) {
-            byte value = runtime.getRam().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX()));
+            byte value = runtime.getMemory().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX()));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else if (addressingMode == AddressingMode.AbsoluteY) {
-            byte value = runtime.getRam().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterY()));
+            byte value = runtime.getMemory().read(toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterY()));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
-            byte value1 = runtime.getRam().read(address);
-            byte value2 = runtime.getRam().read(address + 1);
-            byte value = runtime.getRam().read(toAddress(value2, value1));
+            byte value1 = runtime.getMemory().read(address);
+            byte value2 = runtime.getMemory().read(address + 1);
+            byte value = runtime.getMemory().read(toAddress(value2, value1));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else if (addressingMode == AddressingMode.IndirectY) {
             int address = toZeroPageAddress(eb1, (byte)0);
-            byte value1 = runtime.getRam().read(address);
-            byte value2 = runtime.getRam().read(address + 1);
-            byte value = runtime.getRam().read(toAddress(value2, value1) + toInt(runtime.getCpu().getRegisterY()));
+            byte value1 = runtime.getMemory().read(address);
+            byte value2 = runtime.getMemory().read(address + 1);
+            byte value = runtime.getMemory().read(toAddress(value2, value1) + toInt(runtime.getCpu().getRegisterY()));
             instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), value);
         } else {
@@ -107,24 +107,8 @@ public class OpCode {
     }
 
     static {
-        addOpCode(OpCodes.CLC, Instruction.CLC, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.SEC, Instruction.SEC, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.CLI, Instruction.CLI, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.SEI, Instruction.SEI, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.CLV, Instruction.CLV, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.CLD, Instruction.CLD, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.SED, Instruction.SED, AddressingMode.Implied, 2);
-        addOpCode(OpCodes.LDAI, Instruction.LDA, AddressingMode.Immediate, 2);
-        addOpCode(OpCodes.LDA, Instruction.LDA, AddressingMode.Absolute, 4);
-        addOpCode(OpCodes.LDAZ, Instruction.LDA, AddressingMode.ZeroPage, 3);
-        addOpCode(OpCodes.LDAZX, Instruction.LDA, AddressingMode.ZeroPageX, 4);
-        addOpCode(OpCodes.LDAX, Instruction.LDA, AddressingMode.AbsoluteX, 4);
-        addOpCode(OpCodes.LDAY, Instruction.LDA, AddressingMode.AbsoluteY, 4);
-        addOpCode(OpCodes.LDAIX, Instruction.LDA, AddressingMode.IndirectX, 6);
-        addOpCode(OpCodes.LDAIY, Instruction.LDA, AddressingMode.IndirectY, 5);
-    }
-
-    private static void addOpCode(OpCodes opCode, Instruction instruction, AddressingMode addressingMode, int cycles) {
-        OP_CODES.put(opCode.getCode(), new OpCode(instruction, addressingMode, cycles));
+        for (OpCodes opCode : OpCodes.values()) {
+            OP_CODES.put(opCode.getCode(), new OpCode(opCode.getInstruction(), opCode.getAddressingMode(), opCode.getCycles()));
+        }
     }
 }
