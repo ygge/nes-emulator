@@ -9,6 +9,7 @@ public enum Instruction {
     CLI("Clear interrupt disable flag", runtime -> runtime.getCpu().clearStatusInterrupt()),
     CLV("Clear overflow flag", runtime -> runtime.getCpu().clearStatusOverflow()),
     LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, Instructions::loadAccumulator),
+    ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, Instructions::orMemoryWithAccumulator),
     SEC("Set carry flag", runtime -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt());

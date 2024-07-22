@@ -39,7 +39,7 @@ public class Runtime_LDATest {
         runtime.getMemory().write(1, (byte)0);
         runtime.getMemory().write(2, (byte)1);
 
-        runSingleImmediateOperation(OpCodes.LDA);
+        runSingleImmediateOperation(OpCodes.LDAA);
 
         Assertions.assertEquals((byte)0, runtime.getCpu().getAccumulator());
         Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
@@ -86,7 +86,7 @@ public class Runtime_LDATest {
         runtime.getMemory().write(1, (byte)0);
         runtime.getMemory().write(2, (byte)0);
 
-        runSingleImmediateOperation(OpCodes.LDAX);
+        runSingleImmediateOperation(OpCodes.LDAAX);
 
         Assertions.assertEquals((byte)0, runtime.getCpu().getAccumulator());
         Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
@@ -102,7 +102,7 @@ public class Runtime_LDATest {
         runtime.getMemory().write(1, (byte)0);
         runtime.getMemory().write(2, (byte)0);
 
-        runSingleImmediateOperation(OpCodes.LDAY);
+        runSingleImmediateOperation(OpCodes.LDAAY);
 
         Assertions.assertEquals((byte)0, runtime.getCpu().getAccumulator());
         Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());

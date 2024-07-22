@@ -10,4 +10,10 @@ public final class Instructions {
         runtime.getCpu().setAccumulator(value);
         return value;
     }
+
+    public static byte orMemoryWithAccumulator(Runtime runtime, byte value) {
+        byte orValue = (byte)(value | runtime.getCpu().getAccumulator());
+        runtime.getCpu().setAccumulator(orValue);
+        return orValue;
+    }
 }
