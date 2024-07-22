@@ -6,12 +6,12 @@ import nu.ygge.nes.cpu.OpCode;
 import nu.ygge.nes.memory.Memory;
 
 @Getter
-public class Runtime {
+public class NESRuntime {
 
     private final CPU cpu;
     private final Memory memory;
 
-    public Runtime() {
+    public NESRuntime() {
         this.cpu = new CPU();
         this.memory = new Memory();
     }

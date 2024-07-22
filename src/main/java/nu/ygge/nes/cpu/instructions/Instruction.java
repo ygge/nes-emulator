@@ -11,6 +11,7 @@ public enum Instruction {
     CLV("Clear overflow flag", runtime -> runtime.getCpu().clearStatusOverflow()),
     LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, Instructions::loadAccumulator),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, Instructions::orMemoryWithAccumulator),
+    PHP("Push Processor Status on Stack", Instructions::pushProcessorStatusOnStack),
     SEC("Set carry flag", runtime -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt());

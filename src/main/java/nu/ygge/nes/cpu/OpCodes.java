@@ -8,6 +8,7 @@ public enum OpCodes {
     ORAIX(0x01, Instruction.ORA, AddressingMode.IndirectX, 6),
     ORAZ(0x05, Instruction.ORA, AddressingMode.ZeroPage, 3),
     ASLZ(0x06, Instruction.ASL, AddressingMode.ZeroPage, 5),
+    PHP(0x08, Instruction.PHP, AddressingMode.Implied, 3),
     ORAI(0x09, Instruction.ORA, AddressingMode.Immediate, 2),
     ASLAC(0x0A, Instruction.ASL, AddressingMode.Accumulator, 2),
     ORAA(0x0D, Instruction.ORA, AddressingMode.Absolute, 4),

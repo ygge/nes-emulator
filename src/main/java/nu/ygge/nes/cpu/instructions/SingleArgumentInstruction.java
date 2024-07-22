@@ -1,9 +1,9 @@
 package nu.ygge.nes.cpu.instructions;
 
-import nu.ygge.nes.Runtime;
+import nu.ygge.nes.NESRuntime;
 
 @FunctionalInterface
 public interface SingleArgumentInstruction {
 
-    byte perform(Runtime runtime, byte value);
+    byte perform(NESRuntime runtime, byte value);
 }

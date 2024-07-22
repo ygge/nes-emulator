@@ -1,9 +1,9 @@
 package nu.ygge.nes.cpu.instructions;
 
-import nu.ygge.nes.Runtime;
+import nu.ygge.nes.NESRuntime;
 
 @FunctionalInterface
 public interface NoArgumentInstruction {
 
-    void perform(Runtime runtime);
+    void perform(NESRuntime runtime);
 }

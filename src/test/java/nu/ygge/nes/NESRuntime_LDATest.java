@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class Runtime_LDATest {
+public class NESRuntime_LDATest {
 
-    private Runtime runtime;
+    private NESRuntime runtime;
 
     @BeforeEach
     void setUp() {
-        runtime = new Runtime();
+        runtime = new NESRuntime();
         byte dummyValue = 0x17;
         for (int i = 0; i < 2048; ++i) {
             runtime.getMemory().write(i, dummyValue);

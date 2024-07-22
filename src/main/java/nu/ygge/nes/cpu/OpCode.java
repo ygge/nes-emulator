@@ -1,7 +1,7 @@
 package nu.ygge.nes.cpu;
 
 import lombok.Getter;
-import nu.ygge.nes.Runtime;
+import nu.ygge.nes.NESRuntime;
 import nu.ygge.nes.cpu.instructions.Instruction;
 import nu.ygge.nes.cpu.instructions.StatusFlagsAffected;
 
@@ -27,7 +27,7 @@ public class OpCode {
         return OP_CODES.get(code);
     }
 
-    public void perform(Runtime runtime, byte eb1, byte eb2) {
+    public void perform(NESRuntime runtime, byte eb1, byte eb2) {
         if (addressingMode == AddressingMode.Implied) {
             instruction.getNoArgumentInstruction().perform(runtime);
         } else if (addressingMode == AddressingMode.Accumulator) {
@@ -92,7 +92,7 @@ public class OpCode {
         }
     }
 
-    private void storeValueBack(Runtime runtime, int address, byte result) {
+    private void storeValueBack(NESRuntime runtime, int address, byte result) {
         if (instruction.isStoreValueBack()) {
             runtime.getMemory().write(address, result);
         }

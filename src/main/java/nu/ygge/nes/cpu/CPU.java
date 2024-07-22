@@ -2,6 +2,7 @@ package nu.ygge.nes.cpu;
 
 import lombok.Getter;
 import lombok.Setter;
+import nu.ygge.nes.exception.NESException;
 import nu.ygge.nes.memory.Memory;
 
 public class CPU {
@@ -16,6 +17,15 @@ public class CPU {
 
     @Getter
     private int cycles;
+
+    public void reset() {
+        accumulator = 0;
+        registerX = 0;
+        registerY = 0;
+        stackPointer = 0; // must be set to 0xFF in code
+        statusRegister = 0;
+        cycles = 0;
+    }
 
     public byte readInstruction(Memory memory) {
         var value = memory.read(programCounter);
@@ -109,5 +119,17 @@ public class CPU {
 
     public boolean isStatusCarry() {
         return (statusRegister & 0b1) != 0;
+    }
+
+    public byte getStatusRegister() {
+        return (byte)statusRegister;
+    }
+
+    public void decrementStackPointer() {
+        if (stackPointer == 0) {
+            throw new NESException("Stack overflow");
+        } else {
+            --stackPointer;
+        }
     }
 }
