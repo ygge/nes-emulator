@@ -41,6 +41,35 @@ public final class Instructions {
         return andValue;
     }
 
+    public static byte rotateLeftOneBit(NESRuntime runtime, byte value) {
+        int v = toInt(value);
+        v <<= 1;
+        if (runtime.getCpu().isStatusCarry()) {
+            v |= 1;
+        }
+        if ((v&0x100) == 0) {
+            runtime.getCpu().clearStatusCarry();
+        } else {
+            runtime.getCpu().setStatusCarry();
+            v -= 0x100;
+        }
+        return (byte)v;
+    }
+
+    public static byte testBitsWithAccumulator(NESRuntime runtime, byte value) {
+        if ((value&0x80) != 0) {
+            runtime.getCpu().setStatusNegative();
+        } else {
+            runtime.getCpu().clearStatusNegative();
+        }
+        if ((value&0x40) != 0) {
+            runtime.getCpu().setStatusOverflow();
+        } else {
+            runtime.getCpu().clearStatusOverflow();
+        }
+        return (byte)(value & runtime.getCpu().getAccumulator());
+    }
+
     private static int toInt(byte value) {
         int v = value;
         if (v < 0) {

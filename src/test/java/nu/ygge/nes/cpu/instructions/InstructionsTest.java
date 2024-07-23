@@ -95,6 +95,69 @@ class InstructionsTest {
         verifyAndMemoryWithAccumulator(0xFE, 0x88, 0x88);
     }
 
+    @Test
+    void givenZeroToRotateLeftOneBitThenStillZero() {
+        verifyRotateLeftOneBit(0, 0, false);
+    }
+
+    @Test
+    void givenZeroAndCarrySetToRotateLeftOneBitThenOne() {
+        runtime.getCpu().setStatusCarry();
+        verifyRotateLeftOneBit(0, 1, false);
+    }
+
+    @Test
+    void givenAllBitsSetToRotateOneBitThenSetCarry() {
+        verifyRotateLeftOneBit(0xFF, 0xFE, true);
+    }
+
+    @Test
+    void givenAllBitsAndCarrySetToRotateOneBitThenSetCarry() {
+        runtime.getCpu().setStatusCarry();
+        verifyRotateLeftOneBit(0xFF, 0xFF, true);
+    }
+
+    @Test
+    void givenAllButMostSignificantBitSetToRotateLeftOneBitThenDoNotSetCarry() {
+        verifyRotateLeftOneBit(0x7F, 0xFE, false);
+    }
+
+    @Test
+    void givenBit7SetOfOperandAndAccumulatorZeroToTestBitThenResultIsZeroButNegativeFlagSet() {
+        verifyTestBit(0x80, 0, 0, true, false);
+    }
+
+    @Test
+    void givenBit6SetOfOperandAndAccumulatorZeroToTestBitThenResultIsZeroButOverflowFlagSet() {
+        verifyTestBit(0x40, 0, 0, false, true);
+    }
+
+    @Test
+    void givenAllBitsSetOfBothOperandAndAccumulatorToTestBitThenResultIsAllBitsSet() {
+        verifyTestBit(0xFF, 0xFF, 0xFF, true, true);
+    }
+
+    @Test
+    void givenNoOverlappingBitsSetOfOperandAndAccumulatorToTestBitThenResultIsZero() {
+        verifyTestBit(0xF0, 0x0F, 0, true, true);
+    }
+
+    private void verifyTestBit(int operand, int accumulator, int result, boolean negativeSet, boolean overflowSet) {
+        runtime.getCpu().setAccumulator((byte) accumulator);
+        var ret = Instructions.testBitsWithAccumulator(runtime, (byte) operand);
+
+        Assertions.assertEquals((byte) result, ret);
+        Assertions.assertEquals(negativeSet, runtime.getCpu().isStatusNegative());
+        Assertions.assertEquals(overflowSet, runtime.getCpu().isStatusOverflow());
+    }
+
+    private void verifyRotateLeftOneBit(int intValue, int intResult, boolean carrySet) {
+        var ret = Instructions.rotateLeftOneBit(runtime, (byte) intValue);
+
+        Assertions.assertEquals((byte) intResult, ret);
+        Assertions.assertEquals(carrySet, runtime.getCpu().isStatusCarry());
+    }
+
     private void verifyAndMemoryWithAccumulator(int intValue1, int intValue2, int intResult) {
         runtime.getCpu().setAccumulator((byte) intValue1);
         var ret = Instructions.andMemoryWithAccumulator(runtime, (byte) intValue2);

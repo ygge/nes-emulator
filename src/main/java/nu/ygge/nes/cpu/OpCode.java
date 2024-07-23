@@ -107,6 +107,9 @@ public class OpCode {
         } else {
             cpu.clearStatusZero();
         }
+        if (instruction.getStatusFlagsAffected() == StatusFlagsAffected.ZERO) {
+            return;
+        }
         if (value < 0) {
             cpu.setStatusNegative();
         } else {
@@ -134,6 +137,9 @@ public class OpCode {
 
     static {
         for (OpCodes opCode : OpCodes.values()) {
+            if (OP_CODES.containsKey(opCode.getCode())) {
+                throw new IllegalStateException("Duplicate op code: " + opCode.getCode());
+            }
             OP_CODES.put(opCode.getCode(), new OpCode(opCode.getInstruction(), opCode.getAddressingMode(), opCode.getCycles()));
         }
     }

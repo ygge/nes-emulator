@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum Instruction {
     AND("AND Memory with Accumulator", StatusFlagsAffected.SIMPLE, Instructions::andMemoryWithAccumulator),
     ASL("Shift Left One Bit", StatusFlagsAffected.SIMPLE, Instructions::shiftLeftOneBit, true),
+    BIT("Test Bits in Memory with Accumulator", StatusFlagsAffected.ZERO, Instructions::testBitsWithAccumulator),
     CLC("Clear carry flag", runtime -> runtime.getCpu().clearStatusCarry()),
     CLD("Clear decimal mode", runtime -> runtime.getCpu().clearStatusDecimal()),
     CLI("Clear interrupt disable flag", runtime -> runtime.getCpu().clearStatusInterrupt()),
@@ -13,6 +14,7 @@ public enum Instruction {
     LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, Instructions::loadAccumulator),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, Instructions::orMemoryWithAccumulator),
     PHP("Push Processor Status on Stack", Instructions::pushProcessorStatusOnStack),
+    ROL("Rotate One Bit Left", StatusFlagsAffected.SIMPLE, Instructions::rotateLeftOneBit, true),
     SEC("Set carry flag", runtime -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt());
