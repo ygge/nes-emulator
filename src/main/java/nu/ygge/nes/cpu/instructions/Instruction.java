@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum Instruction {
+    AND("AND Memory with Accumulator", StatusFlagsAffected.SIMPLE, Instructions::andMemoryWithAccumulator),
     ASL("Shift Left One Bit", StatusFlagsAffected.SIMPLE, Instructions::shiftLeftOneBit, true),
     CLC("Clear carry flag", runtime -> runtime.getCpu().clearStatusCarry()),
     CLD("Clear decimal mode", runtime -> runtime.getCpu().clearStatusDecimal()),

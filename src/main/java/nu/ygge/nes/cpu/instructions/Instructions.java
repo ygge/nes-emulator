@@ -35,6 +35,12 @@ public final class Instructions {
         runtime.getMemory().write(address, runtime.getCpu().getStatusRegister());
     }
 
+    public static byte andMemoryWithAccumulator(NESRuntime runtime, byte value) {
+        var andValue = (byte)(value & runtime.getCpu().getAccumulator());
+        runtime.getCpu().setAccumulator(andValue);
+        return andValue;
+    }
+
     private static int toInt(byte value) {
         int v = value;
         if (v < 0) {
