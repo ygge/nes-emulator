@@ -4,6 +4,7 @@ import lombok.Getter;
 import nu.ygge.nes.NESRuntime;
 import nu.ygge.nes.cpu.instructions.Instruction;
 import nu.ygge.nes.cpu.instructions.StatusFlagsAffected;
+import nu.ygge.nes.cpu.instructions.WriteValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,68 +34,58 @@ public class OpCode {
         } else if (addressingMode == AddressingMode.Accumulator) {
             var result = instruction.getSingleArgumentInstruction().perform(runtime, runtime.getCpu().getAccumulator());
             setStatusFlags(runtime.getCpu(), result);
-            if (instruction.isStoreValueBack()) {
+            if (instruction.getWriteValue() != WriteValue.None) {
                 runtime.getCpu().setAccumulator(result);
             }
         } else if (addressingMode == AddressingMode.Immediate) {
             var result = instruction.getSingleArgumentInstruction().perform(runtime, eb1);
             setStatusFlags(runtime.getCpu(), result);
+            if (instruction.getWriteValue() == WriteValue.Accumulator) {
+                runtime.getCpu().setAccumulator(result);
+            } else if (instruction.getWriteValue() != WriteValue.None) {
+                throw new IllegalStateException("Immediate access mode can only store value in Accumulator");
+            }
         } else if (addressingMode == AddressingMode.Absolute) {
-            int address = toAddress(eb1, eb2);
-            byte value = runtime.getMemory().read(address);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, address, result);
+            performWithAddress(runtime, toAddress(eb1, eb2));
         } else if (addressingMode == AddressingMode.ZeroPage) {
-            int address = toAddress((byte) 0, eb1);
-            byte value = runtime.getMemory().read(address);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, address, result);
+            performWithAddress(runtime, toAddress((byte) 0, eb1));
         } else if (addressingMode == AddressingMode.ZeroPageX) {
-            int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
-            byte value = runtime.getMemory().read(address);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, address, result);
+            performWithAddress(runtime, toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
         } else if (addressingMode == AddressingMode.AbsoluteX) {
-            int address = toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX());
-            byte value = runtime.getMemory().read(address);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, address, result);
+            performWithAddress(runtime, toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX()));
         } else if (addressingMode == AddressingMode.AbsoluteY) {
-            int address = toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterY());
-            byte value = runtime.getMemory().read(address);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, address, result);
+            performWithAbsoluteY(runtime, eb1, eb2);
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
-            int finalAddress = toAddress(value2, value1);
-            byte value = runtime.getMemory().read(finalAddress);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, finalAddress, result);
+            performWithAddress(runtime, toAddress(value2, value1));
         } else if (addressingMode == AddressingMode.IndirectY) {
             int address = toZeroPageAddress(eb1, (byte)0);
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
-            int finalAddress = toAddress(value2, value1) + toInt(runtime.getCpu().getRegisterY());
-            byte value = runtime.getMemory().read(finalAddress);
-            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-            setStatusFlags(runtime.getCpu(), result);
-            storeValueBack(runtime, finalAddress, result);
+            performWithAbsoluteY(runtime, value2, value1);
         } else {
             throw new UnsupportedOperationException("Addressing mode not supported: " + addressingMode);
         }
     }
 
-    private void storeValueBack(NESRuntime runtime, int address, byte result) {
-        if (instruction.isStoreValueBack()) {
-            runtime.getMemory().write(address, result);
+    private void performWithAbsoluteY(NESRuntime runtime, byte msb, byte lsb) {
+        int address = toAddress(msb, lsb) + toInt(runtime.getCpu().getRegisterY());
+        performWithAddress(runtime, address);
+    }
+
+    private void performWithAddress(NESRuntime runtime, int address) {
+        byte value = runtime.getMemory().read(address);
+        var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+        setStatusFlags(runtime.getCpu(), result);
+        writeValue(runtime, address, result);
+    }
+
+    private void writeValue(NESRuntime runtime, int address, byte result) {
+        switch (instruction.getWriteValue()) {
+            case Accumulator -> runtime.getCpu().setAccumulator(result);
+            case AccumulatorOrMemory -> runtime.getMemory().write(address, result);
         }
     }
 

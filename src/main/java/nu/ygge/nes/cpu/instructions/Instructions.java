@@ -12,9 +12,7 @@ public final class Instructions {
     }
 
     public static byte orMemoryWithAccumulator(NESRuntime runtime, byte value) {
-        byte orValue = (byte)(value | runtime.getCpu().getAccumulator());
-        runtime.getCpu().setAccumulator(orValue);
-        return orValue;
+        return (byte)(value | runtime.getCpu().getAccumulator());
     }
 
     public static byte shiftLeftOneBit(NESRuntime runtime, byte value) {
@@ -36,9 +34,7 @@ public final class Instructions {
     }
 
     public static byte andMemoryWithAccumulator(NESRuntime runtime, byte value) {
-        var andValue = (byte)(value & runtime.getCpu().getAccumulator());
-        runtime.getCpu().setAccumulator(andValue);
-        return andValue;
+        return (byte)(value & runtime.getCpu().getAccumulator());
     }
 
     public static byte rotateLeftOneBit(NESRuntime runtime, byte value) {

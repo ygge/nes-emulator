@@ -191,7 +191,6 @@ class InstructionsTest {
 
         byte result = (byte) intResult;
         Assertions.assertEquals(result, ret);
-        Assertions.assertEquals(result, runtime.getCpu().getAccumulator());
     }
 
     private void verifyPushProcessorStatus(int stackPointer) {
@@ -217,7 +216,6 @@ class InstructionsTest {
 
         byte result = (byte) intResult;
         Assertions.assertEquals(result, ret);
-        Assertions.assertEquals(result, runtime.getCpu().getAccumulator());
     }
 
     private void verifyLoadAccumulator(int intValue) {
