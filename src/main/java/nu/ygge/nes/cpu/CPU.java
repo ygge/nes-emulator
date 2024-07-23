@@ -5,14 +5,14 @@ import lombok.Setter;
 import nu.ygge.nes.exception.NESException;
 import nu.ygge.nes.memory.Memory;
 
+@Getter
 public class CPU {
 
-    @Getter
     @Setter
     private int programCounter;
-    @Getter
     @Setter
     private byte accumulator, registerX, registerY, stackPointer;
+    @Setter
     private short statusRegister;
 
     @Getter
@@ -130,6 +130,14 @@ public class CPU {
             throw new NESException("Stack overflow");
         } else {
             --stackPointer;
+        }
+    }
+
+    public void incrementStackPointer() {
+        if (stackPointer == -1) {
+            throw new NESException("Stack empty");
+        } else {
+            ++stackPointer;
         }
     }
 }

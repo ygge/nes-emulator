@@ -24,6 +24,7 @@ public enum OpCodes {
     BITZ(0x24, Instruction.BIT, AddressingMode.ZeroPage, 3),
     ANDZ(0x25, Instruction.AND, AddressingMode.ZeroPage, 3),
     ROLZ(0x26, Instruction.ROL, AddressingMode.ZeroPage, 5),
+    PLP(0x28, Instruction.PLP, AddressingMode.Implied, 4),
     ANDI(0x29, Instruction.AND, AddressingMode.Immediate, 2),
     ROLAC(0x2A, Instruction.ROL, AddressingMode.Accumulator, 2),
     BITA(0x2C, Instruction.BIT, AddressingMode.Absolute, 4),

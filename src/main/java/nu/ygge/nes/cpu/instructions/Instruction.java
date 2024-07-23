@@ -14,6 +14,7 @@ public enum Instruction {
     LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, Instructions::loadAccumulator),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, Instructions::orMemoryWithAccumulator),
     PHP("Push Processor Status on Stack", Instructions::pushProcessorStatusOnStack),
+    PLP("Pull Processor Status from Stack", Instructions::pullProcessorStatusFromStack),
     ROL("Rotate One Bit Left", StatusFlagsAffected.SIMPLE, Instructions::rotateLeftOneBit, true),
     SEC("Set carry flag", runtime -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),

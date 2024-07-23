@@ -70,6 +70,12 @@ public final class Instructions {
         return (byte)(value & runtime.getCpu().getAccumulator());
     }
 
+    public static void pullProcessorStatusFromStack(NESRuntime runtime) {
+        var address = getStackPointerAddress(runtime);
+        runtime.getCpu().incrementStackPointer();
+        runtime.getCpu().setStatusRegister(runtime.getMemory().read(address));
+    }
+
     private static int toInt(byte value) {
         int v = value;
         if (v < 0) {

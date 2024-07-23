@@ -142,6 +142,33 @@ class InstructionsTest {
         verifyTestBit(0xF0, 0x0F, 0, true, true);
     }
 
+    @Test
+    void givenFullStackToPullProcessorStatusThenPullStatus() {
+        verifyPullProcessorStatus(0, 0xF0);
+        Assertions.assertTrue(runtime.getCpu().isStatusNegative());
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+    }
+
+    @Test
+    void givenAlmostEmptyStackToPullProcessorStatusThenPullStatus() {
+        verifyPullProcessorStatus(0xFE, 1);
+        Assertions.assertFalse(runtime.getCpu().isStatusNegative());
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @Test
+    void givenEmptyStackToPullProcessorStatusThenThrowException() {
+        Assertions.assertThrows(NESException.class, () -> verifyPullProcessorStatus(0xFF, 0));
+    }
+
+    private void verifyPullProcessorStatus(int stackPointer, int statusRegister) {
+        runtime.getCpu().setStackPointer((byte) stackPointer);
+        runtime.getMemory().write(0x100 | stackPointer, (byte) statusRegister);
+        Instructions.pullProcessorStatusFromStack(runtime);
+
+        Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());
+    }
+
     private void verifyTestBit(int operand, int accumulator, int result, boolean negativeSet, boolean overflowSet) {
         runtime.getCpu().setAccumulator((byte) accumulator);
         var ret = Instructions.testBitsWithAccumulator(runtime, (byte) operand);
