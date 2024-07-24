@@ -1,87 +1,48 @@
 package nu.ygge.nes.cpu.instructions;
 
-import nu.ygge.nes.NESRuntime;
+import lombok.Getter;
 
-public final class Instructions {
+@Getter
+public enum Instructions {
+    AND("AND Memory with Accumulator", StatusFlagsAffected.SIMPLE, InstructionFunctions::andMemoryWithAccumulator, WriteValue.Accumulator),
+    ASL("Shift Left One Bit", StatusFlagsAffected.SIMPLE, InstructionFunctions::shiftLeftOneBit, WriteValue.AccumulatorOrMemory),
+    BIT("Test Bits in Memory with Accumulator", StatusFlagsAffected.ZERO, InstructionFunctions::testBitsWithAccumulator),
+    CLC("Clear carry flag", runtime -> runtime.getCpu().clearStatusCarry()),
+    CLD("Clear decimal mode", runtime -> runtime.getCpu().clearStatusDecimal()),
+    CLI("Clear interrupt disable flag", runtime -> runtime.getCpu().clearStatusInterrupt()),
+    CLV("Clear overflow flag", runtime -> runtime.getCpu().clearStatusOverflow()),
+    LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, InstructionFunctions::loadAccumulator),
+    ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, InstructionFunctions::orMemoryWithAccumulator, WriteValue.Accumulator),
+    PHP("Push Processor Status on Stack", InstructionFunctions::pushProcessorStatusOnStack),
+    PLP("Pull Processor Status from Stack", InstructionFunctions::pullProcessorStatusFromStack),
+    ROL("Rotate One Bit Left", StatusFlagsAffected.SIMPLE, InstructionFunctions::rotateLeftOneBit, WriteValue.AccumulatorOrMemory),
+    SEC("Set carry flag", runtime -> runtime.getCpu().setStatusCarry()),
+    SED("Set decimal mode", runtime -> runtime.getCpu().setStatusDecimal()),
+    SEI("Set interrupt disable flag", runtime -> runtime.getCpu().setStatusInterrupt());
 
-    private Instructions() { }
+    private final String description;
+    private final StatusFlagsAffected statusFlagsAffected;
+    private final NoArgumentInstruction noArgumentInstruction;
+    private final SingleArgumentInstruction singleArgumentInstruction;
+    private final WriteValue writeValue;
 
-    public static byte loadAccumulator(NESRuntime runtime, byte value) {
-        runtime.getCpu().setAccumulator(value);
-        return value;
+    Instructions(String description, NoArgumentInstruction noArgumentInstruction) {
+        this.description = description;
+        this.statusFlagsAffected = StatusFlagsAffected.NONE;
+        this.noArgumentInstruction = noArgumentInstruction;
+        this.singleArgumentInstruction = null;
+        writeValue = WriteValue.None;
     }
 
-    public static byte orMemoryWithAccumulator(NESRuntime runtime, byte value) {
-        return (byte)(value | runtime.getCpu().getAccumulator());
+    Instructions(String description, StatusFlagsAffected statusFlagsAffected, SingleArgumentInstruction singleArgumentInstruction) {
+        this(description, statusFlagsAffected, singleArgumentInstruction, WriteValue.None);
     }
 
-    public static byte shiftLeftOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
-        v <<= 1;
-        if ((v&0x100) == 0) {
-            runtime.getCpu().clearStatusCarry();
-        } else {
-            runtime.getCpu().setStatusCarry();
-            v -= 0x100;
-        }
-        return (byte)v;
-    }
-
-    public static void pushProcessorStatusOnStack(NESRuntime runtime) {
-        var address = getStackPointerAddress(runtime);
-        runtime.getCpu().decrementStackPointer();
-        runtime.getMemory().write(address, runtime.getCpu().getStatusRegister());
-    }
-
-    public static byte andMemoryWithAccumulator(NESRuntime runtime, byte value) {
-        return (byte)(value & runtime.getCpu().getAccumulator());
-    }
-
-    public static byte rotateLeftOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
-        v <<= 1;
-        if (runtime.getCpu().isStatusCarry()) {
-            v |= 1;
-        }
-        if ((v&0x100) == 0) {
-            runtime.getCpu().clearStatusCarry();
-        } else {
-            runtime.getCpu().setStatusCarry();
-            v -= 0x100;
-        }
-        return (byte)v;
-    }
-
-    public static byte testBitsWithAccumulator(NESRuntime runtime, byte value) {
-        if ((value&0x80) != 0) {
-            runtime.getCpu().setStatusNegative();
-        } else {
-            runtime.getCpu().clearStatusNegative();
-        }
-        if ((value&0x40) != 0) {
-            runtime.getCpu().setStatusOverflow();
-        } else {
-            runtime.getCpu().clearStatusOverflow();
-        }
-        return (byte)(value & runtime.getCpu().getAccumulator());
-    }
-
-    public static void pullProcessorStatusFromStack(NESRuntime runtime) {
-        var address = getStackPointerAddress(runtime);
-        runtime.getCpu().incrementStackPointer();
-        runtime.getCpu().setStatusRegister(runtime.getMemory().read(address));
-    }
-
-    private static int toInt(byte value) {
-        int v = value;
-        if (v < 0) {
-            v += 256;
-        }
-        return v;
-    }
-
-    private static int getStackPointerAddress(NESRuntime runtime) {
-        int address = toInt(runtime.getCpu().getStackPointer());
-        return 0x100 | address;
+    Instructions(String description, StatusFlagsAffected statusFlagsAffected, SingleArgumentInstruction singleArgumentInstruction, WriteValue writeValue) {
+        this.description = description;
+        this.statusFlagsAffected = statusFlagsAffected;
+        this.noArgumentInstruction = null;
+        this.singleArgumentInstruction = singleArgumentInstruction;
+        this.writeValue = writeValue;
     }
 }

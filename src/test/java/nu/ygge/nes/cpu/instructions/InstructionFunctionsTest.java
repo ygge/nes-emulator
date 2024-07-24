@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class InstructionsTest {
+class InstructionFunctionsTest {
 
     private NESRuntime runtime;
 
@@ -164,14 +164,14 @@ class InstructionsTest {
     private void verifyPullProcessorStatus(int stackPointer, int statusRegister) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) statusRegister);
-        Instructions.pullProcessorStatusFromStack(runtime);
+        InstructionFunctions.pullProcessorStatusFromStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());
     }
 
     private void verifyTestBit(int operand, int accumulator, int result, boolean negativeSet, boolean overflowSet) {
         runtime.getCpu().setAccumulator((byte) accumulator);
-        var ret = Instructions.testBitsWithAccumulator(runtime, (byte) operand);
+        var ret = InstructionFunctions.testBitsWithAccumulator(runtime, (byte) operand);
 
         Assertions.assertEquals((byte) result, ret);
         Assertions.assertEquals(negativeSet, runtime.getCpu().isStatusNegative());
@@ -179,7 +179,7 @@ class InstructionsTest {
     }
 
     private void verifyRotateLeftOneBit(int intValue, int intResult, boolean carrySet) {
-        var ret = Instructions.rotateLeftOneBit(runtime, (byte) intValue);
+        var ret = InstructionFunctions.rotateLeftOneBit(runtime, (byte) intValue);
 
         Assertions.assertEquals((byte) intResult, ret);
         Assertions.assertEquals(carrySet, runtime.getCpu().isStatusCarry());
@@ -187,7 +187,7 @@ class InstructionsTest {
 
     private void verifyAndMemoryWithAccumulator(int intValue1, int intValue2, int intResult) {
         runtime.getCpu().setAccumulator((byte) intValue1);
-        var ret = Instructions.andMemoryWithAccumulator(runtime, (byte) intValue2);
+        var ret = InstructionFunctions.andMemoryWithAccumulator(runtime, (byte) intValue2);
 
         byte result = (byte) intResult;
         Assertions.assertEquals(result, ret);
@@ -197,14 +197,14 @@ class InstructionsTest {
         runtime.getCpu().setStatusCarry();
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStackPointer((byte) stackPointer);
-        Instructions.pushProcessorStatusOnStack(runtime);
+        InstructionFunctions.pushProcessorStatusOnStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer - 1), runtime.getCpu().getStackPointer());
         Assertions.assertEquals(runtime.getCpu().getStatusRegister(), runtime.getMemory().read(0x100 | stackPointer));
     }
 
     private void verifyShiftLeftOneBit(int intValue, int intResult, boolean carrySet) {
-        var ret = Instructions.shiftLeftOneBit(runtime, (byte) intValue);
+        var ret = InstructionFunctions.shiftLeftOneBit(runtime, (byte) intValue);
 
         Assertions.assertEquals((byte) intResult, ret);
         Assertions.assertEquals(carrySet, runtime.getCpu().isStatusCarry());
@@ -212,7 +212,7 @@ class InstructionsTest {
 
     private void verifyOrMemoryWithAccumulator(int intValue1, int intValue2, int intResult) {
         runtime.getCpu().setAccumulator((byte) intValue1);
-        var ret = Instructions.orMemoryWithAccumulator(runtime, (byte) intValue2);
+        var ret = InstructionFunctions.orMemoryWithAccumulator(runtime, (byte) intValue2);
 
         byte result = (byte) intResult;
         Assertions.assertEquals(result, ret);
@@ -220,7 +220,7 @@ class InstructionsTest {
 
     private void verifyLoadAccumulator(int intValue) {
         byte value = (byte) intValue;
-        var ret = Instructions.loadAccumulator(runtime, value);
+        var ret = InstructionFunctions.loadAccumulator(runtime, value);
 
         Assertions.assertEquals(value, ret);
         Assertions.assertEquals(value, runtime.getCpu().getAccumulator());

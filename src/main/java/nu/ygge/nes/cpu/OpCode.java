@@ -2,7 +2,7 @@ package nu.ygge.nes.cpu;
 
 import lombok.Getter;
 import nu.ygge.nes.NESRuntime;
-import nu.ygge.nes.cpu.instructions.Instruction;
+import nu.ygge.nes.cpu.instructions.Instructions;
 import nu.ygge.nes.cpu.instructions.StatusFlagsAffected;
 import nu.ygge.nes.cpu.instructions.WriteValue;
 
@@ -14,11 +14,11 @@ public class OpCode {
 
     private static final Map<Byte, OpCode> OP_CODES = new HashMap<>();
 
-    private final Instruction instruction;
+    private final Instructions instruction;
     private final AddressingMode addressingMode;
     private final int cycles;
 
-    private OpCode(Instruction instruction, AddressingMode addressingMode, int cycles) {
+    private OpCode(Instructions instruction, AddressingMode addressingMode, int cycles) {
         this.instruction = instruction;
         this.addressingMode = addressingMode;
         this.cycles = cycles;
