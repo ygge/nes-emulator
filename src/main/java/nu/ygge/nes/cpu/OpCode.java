@@ -61,10 +61,20 @@ public class OpCode {
             byte value2 = runtime.getMemory().read(address + 1);
             performWithAddress(runtime, toAddress(value2, value1));
         } else if (addressingMode == AddressingMode.IndirectY) {
-            int address = toZeroPageAddress(eb1, (byte)0);
+            int address = toZeroPageAddress(eb1, (byte) 0);
             byte value1 = runtime.getMemory().read(address);
             byte value2 = runtime.getMemory().read(address + 1);
             performWithAbsoluteY(runtime, value2, value1);
+        } else if (addressingMode == AddressingMode.Relative) {
+            if (instruction.getBranchingInstruction().shouldBranch(runtime.getCpu())) {
+                var newValue = runtime.getCpu().getProgramCounter() + eb1;
+                if (newValue/256 != runtime.getCpu().getProgramCounter()/256) {
+                    runtime.getCpu().addCycles(2);
+                } else {
+                    runtime.getCpu().addCycles(1);
+                }
+                runtime.getCpu().setProgramCounter(newValue);
+            }
         } else {
             throw new UnsupportedOperationException("Addressing mode not supported: " + addressingMode);
         }

@@ -14,7 +14,6 @@ public class CPU {
     private byte accumulator, registerX, registerY, stackPointer;
     @Setter
     private short statusRegister;
-
     @Getter
     private int cycles;
 
