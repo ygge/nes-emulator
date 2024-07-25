@@ -21,6 +21,7 @@ public enum Instructions {
     CLD("Clear decimal mode", (NESRuntime runtime) -> runtime.getCpu().clearStatusDecimal()),
     CLI("Clear interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().clearStatusInterrupt()),
     CLV("Clear overflow flag", (NESRuntime runtime) -> runtime.getCpu().clearStatusOverflow()),
+    EOR("Exclusive-OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, InstructionFunctions::exclusiveOrMemoryWithAccumulator, WriteValue.Accumulator),
     LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, InstructionFunctions::loadAccumulator),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, InstructionFunctions::orMemoryWithAccumulator, WriteValue.Accumulator),
     PHP("Push Processor Status on Stack", InstructionFunctions::pushProcessorStatusOnStack),

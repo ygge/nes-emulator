@@ -160,6 +160,32 @@ class InstructionFunctionsTest {
     void givenEmptyStackToPullProcessorStatusThenThrowException() {
         Assertions.assertThrows(NESException.class, () -> verifyPullProcessorStatus(0xFF, 0));
     }
+    @Test
+    void givenZeroAndPositiveValueToExclusiveOrMemoryWithAccumulatorThenSetAccumulatorToResult() {
+        verifyExclusiveOrMemoryWithAccumulator(0, 42, 42);
+    }
+
+    @Test
+    void givenZeroAndNegativeValueToExclusiveOrMemoryWithAccumulatorThenSetAccumulatorToResult() {
+        verifyExclusiveOrMemoryWithAccumulator(0, 0xEE, 0xEE);
+    }
+
+    @Test
+    void givenPositiveAndNegativeValueToExclusiveOrMemoryWithAccumulatorThenSetAccumulatorToResult() {
+        verifyExclusiveOrMemoryWithAccumulator(1, 0xEE, 0xEF);
+    }
+
+    @Test
+    void givenOverlappingBitsToExclusiveOrMemoryWithAccumulatorThenSetAccumulatorToResult() {
+        verifyExclusiveOrMemoryWithAccumulator(0xFF, 0x7F, 0x80);
+    }
+
+    private void verifyExclusiveOrMemoryWithAccumulator(int accumulator, int value, int intResult) {
+        runtime.getCpu().setAccumulator((byte) accumulator);
+        var ret = InstructionFunctions.exclusiveOrMemoryWithAccumulator(runtime, (byte) value);
+
+        Assertions.assertEquals((byte) intResult, ret);
+    }
 
     private void verifyPullProcessorStatus(int stackPointer, int statusRegister) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
@@ -189,8 +215,7 @@ class InstructionFunctionsTest {
         runtime.getCpu().setAccumulator((byte) intValue1);
         var ret = InstructionFunctions.andMemoryWithAccumulator(runtime, (byte) intValue2);
 
-        byte result = (byte) intResult;
-        Assertions.assertEquals(result, ret);
+        Assertions.assertEquals((byte) intResult, ret);
     }
 
     private void verifyPushProcessorStatus(int stackPointer) {
@@ -214,8 +239,7 @@ class InstructionFunctionsTest {
         runtime.getCpu().setAccumulator((byte) intValue1);
         var ret = InstructionFunctions.orMemoryWithAccumulator(runtime, (byte) intValue2);
 
-        byte result = (byte) intResult;
-        Assertions.assertEquals(result, ret);
+        Assertions.assertEquals((byte) intResult, ret);
     }
 
     private void verifyLoadAccumulator(int intValue) {

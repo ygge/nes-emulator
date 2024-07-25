@@ -72,6 +72,10 @@ public final class InstructionFunctions {
         runtime.getCpu().setStatusRegister(runtime.getMemory().read(address));
     }
 
+    public static byte exclusiveOrMemoryWithAccumulator(NESRuntime runtime, byte value) {
+        return (byte)(value ^ runtime.getCpu().getAccumulator());
+    }
+
     private static int toInt(byte value) {
         int v = value;
         if (v < 0) {
