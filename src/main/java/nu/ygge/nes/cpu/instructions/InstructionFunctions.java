@@ -76,6 +76,32 @@ public final class InstructionFunctions {
         return (byte)(value ^ runtime.getCpu().getAccumulator());
     }
 
+    public static byte shiftRightOneBit(NESRuntime runtime, byte value) {
+        int v = toInt(value);
+        if ((v&1) == 0) {
+            runtime.getCpu().clearStatusCarry();
+        } else {
+            runtime.getCpu().setStatusCarry();
+        }
+        v >>= 1;
+        return (byte)v;
+    }
+
+    public static byte rotateRightOneBit(NESRuntime runtime, byte value) {
+        int v = toInt(value);
+        var isCarry = runtime.getCpu().isStatusCarry();
+        if ((v&1) == 0) {
+            runtime.getCpu().clearStatusCarry();
+        } else {
+            runtime.getCpu().setStatusCarry();
+        }
+        v >>= 1;
+        if (isCarry) {
+            v |= 0x80;
+        }
+        return (byte)v;
+    }
+
     private static int toInt(byte value) {
         int v = value;
         if (v < 0) {
@@ -87,16 +113,5 @@ public final class InstructionFunctions {
     private static int getStackPointerAddress(NESRuntime runtime) {
         int address = toInt(runtime.getCpu().getStackPointer());
         return 0x100 | address;
-    }
-
-    public static byte shiftRightOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
-        if ((v&1) == 0) {
-            runtime.getCpu().clearStatusCarry();
-        } else {
-            runtime.getCpu().setStatusCarry();
-        }
-        v >>= 1;
-        return (byte)v;
     }
 }

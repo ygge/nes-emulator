@@ -28,6 +28,7 @@ public enum Instructions {
     PHP("Push Processor Status on Stack", InstructionFunctions::pushProcessorStatusOnStack),
     PLP("Pull Processor Status from Stack", InstructionFunctions::pullProcessorStatusFromStack),
     ROL("Rotate One Bit Left", StatusFlagsAffected.SIMPLE, InstructionFunctions::rotateLeftOneBit, WriteValue.AccumulatorOrMemory),
+    ROR("Rotate One Bit Right", StatusFlagsAffected.SIMPLE, InstructionFunctions::rotateRightOneBit, WriteValue.AccumulatorOrMemory),
     SEC("Set carry flag", (NESRuntime runtime) -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", (NESRuntime runtime) -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt());

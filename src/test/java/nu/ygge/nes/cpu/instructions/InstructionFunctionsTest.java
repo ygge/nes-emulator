@@ -107,12 +107,12 @@ class InstructionFunctionsTest {
     }
 
     @Test
-    void givenAllBitsSetToRotateOneBitThenSetCarry() {
+    void givenAllBitsSetToRotateLeftOneBitThenSetCarry() {
         verifyRotateLeftOneBit(0xFF, 0xFE, true);
     }
 
     @Test
-    void givenAllBitsAndCarrySetToRotateOneBitThenSetCarry() {
+    void givenAllBitsAndCarrySetToRotateLeftOneBitThenSetCarry() {
         runtime.getCpu().setStatusCarry();
         verifyRotateLeftOneBit(0xFF, 0xFF, true);
     }
@@ -193,6 +193,40 @@ class InstructionFunctionsTest {
     @Test
     void givenAllButLeastSignificantBitSetToShiftRightOneBitThenDoNotSetCarry() {
         verifyShiftRightOneBit(0xFE, 0x7F, false);
+    }
+
+    @Test
+    void givenZeroToRotateRightOneBitThenStillZero() {
+        verifyRotateRightOneBit(0, 0, false);
+    }
+
+    @Test
+    void givenZeroAndCarrySetToRotateRightOneBitThenMostSignificantBitSet() {
+        runtime.getCpu().setStatusCarry();
+        verifyRotateRightOneBit(0, 0x80, false);
+    }
+
+    @Test
+    void givenAllBitsSetToRotateRightOneBitThenSetCarry() {
+        verifyRotateRightOneBit(0xFF, 0x7F, true);
+    }
+
+    @Test
+    void givenAllBitsAndCarrySetToRotateRightOneBitThenSetCarry() {
+        runtime.getCpu().setStatusCarry();
+        verifyRotateRightOneBit(0xFF, 0xFF, true);
+    }
+
+    @Test
+    void givenAllButLeastSignificantBitSetToRotateRightOneBitThenDoNotSetCarry() {
+        verifyRotateRightOneBit(0xFE, 0x7F, false);
+    }
+
+    private void verifyRotateRightOneBit(int intValue, int intResult, boolean carrySet) {
+        var ret = InstructionFunctions.rotateRightOneBit(runtime, (byte) intValue);
+
+        Assertions.assertEquals((byte) intResult, ret);
+        Assertions.assertEquals(carrySet, runtime.getCpu().isStatusCarry());
     }
 
     private void verifyShiftRightOneBit(int intValue, int intResult, boolean carrySet) {
