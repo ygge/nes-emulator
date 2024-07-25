@@ -180,6 +180,28 @@ class InstructionFunctionsTest {
         verifyExclusiveOrMemoryWithAccumulator(0xFF, 0x7F, 0x80);
     }
 
+    @Test
+    void givenZeroToShiftRightOneBitThenStillZero() {
+        verifyShiftRightOneBit(0, 0, false);
+    }
+
+    @Test
+    void givenAllBitsSetToShiftRightOneBitThenSetCarry() {
+        verifyShiftRightOneBit(0xFF, 0x7F, true);
+    }
+
+    @Test
+    void givenAllButLeastSignificantBitSetToShiftRightOneBitThenDoNotSetCarry() {
+        verifyShiftRightOneBit(0xFE, 0x7F, false);
+    }
+
+    private void verifyShiftRightOneBit(int intValue, int intResult, boolean carrySet) {
+        var ret = InstructionFunctions.shiftRightOneBit(runtime, (byte) intValue);
+
+        Assertions.assertEquals((byte) intResult, ret);
+        Assertions.assertEquals(carrySet, runtime.getCpu().isStatusCarry());
+    }
+
     private void verifyExclusiveOrMemoryWithAccumulator(int accumulator, int value, int intResult) {
         runtime.getCpu().setAccumulator((byte) accumulator);
         var ret = InstructionFunctions.exclusiveOrMemoryWithAccumulator(runtime, (byte) value);

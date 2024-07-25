@@ -23,6 +23,7 @@ public enum Instructions {
     CLV("Clear overflow flag", (NESRuntime runtime) -> runtime.getCpu().clearStatusOverflow()),
     EOR("Exclusive-OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, InstructionFunctions::exclusiveOrMemoryWithAccumulator, WriteValue.Accumulator),
     LDA("Load accumulator with memory", StatusFlagsAffected.SIMPLE, InstructionFunctions::loadAccumulator),
+    LSR("Shift Right One Bit", StatusFlagsAffected.SIMPLE, InstructionFunctions::shiftRightOneBit, WriteValue.AccumulatorOrMemory),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.SIMPLE, InstructionFunctions::orMemoryWithAccumulator, WriteValue.Accumulator),
     PHP("Push Processor Status on Stack", InstructionFunctions::pushProcessorStatusOnStack),
     PLP("Pull Processor Status from Stack", InstructionFunctions::pullProcessorStatusFromStack),

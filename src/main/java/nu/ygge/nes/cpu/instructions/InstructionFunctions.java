@@ -88,4 +88,15 @@ public final class InstructionFunctions {
         int address = toInt(runtime.getCpu().getStackPointer());
         return 0x100 | address;
     }
+
+    public static byte shiftRightOneBit(NESRuntime runtime, byte value) {
+        int v = toInt(value);
+        if ((v&1) == 0) {
+            runtime.getCpu().clearStatusCarry();
+        } else {
+            runtime.getCpu().setStatusCarry();
+        }
+        v >>= 1;
+        return (byte)v;
+    }
 }
