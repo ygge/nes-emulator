@@ -40,7 +40,7 @@ public enum OpCodes {
     ROLAX(0x3E, Instructions.ROL, AddressingMode.AbsoluteX, 7),
     SEC(0x38, Instructions.SEC, AddressingMode.Implied, 2),
     EORIX(0x41, Instructions.EOR, AddressingMode.IndirectX, 6),
-    EORZ(0x45, Instructions.EOR, AddressingMode.ZeroPageX, 3),
+    EORZ(0x45, Instructions.EOR, AddressingMode.ZeroPage, 3),
     EORI(0x49, Instructions.EOR, AddressingMode.Immediate, 2),
     EORA(0x4D, Instructions.EOR, AddressingMode.Absolute, 4),
     BVC(0x50, Instructions.BVC, AddressingMode.Relative, 2),
