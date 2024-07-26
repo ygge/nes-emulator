@@ -126,6 +126,10 @@ public final class InstructionFunctions {
         return (byte) sum;
     }
 
+    public static byte subtractMemoryFromAccumulator(NESRuntime runtime, byte value) {
+        return addMemoryToAccumulator(runtime, (byte)(-value + 1));
+    }
+
     private static byte pullFromStack(NESRuntime runtime) {
         var address = getStackPointerAddress(runtime);
         runtime.getCpu().incrementStackPointer();

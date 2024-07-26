@@ -32,6 +32,7 @@ public enum Instructions {
     PLP("Pull Processor Status from Stack", InstructionFunctions::pullProcessorStatusFromStack),
     ROL("Rotate One Bit Left", StatusFlagsAffected.STANDARD, InstructionFunctions::rotateLeftOneBit, WriteValue.AccumulatorOrMemory),
     ROR("Rotate One Bit Right", StatusFlagsAffected.STANDARD, InstructionFunctions::rotateRightOneBit, WriteValue.AccumulatorOrMemory),
+    SBC("Subtract Memory from Accumulator with Borrow", StatusFlagsAffected.STANDARD, InstructionFunctions::subtractMemoryFromAccumulator, WriteValue.Accumulator),
     SEC("Set carry flag", (NESRuntime runtime) -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", (NESRuntime runtime) -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt());

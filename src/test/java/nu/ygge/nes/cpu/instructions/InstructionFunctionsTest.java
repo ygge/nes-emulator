@@ -308,6 +308,18 @@ class InstructionFunctionsTest {
         Assertions.assertTrue(runtime.getCpu().isStatusOverflow());
     }
 
+    @Test
+    void givenSubtractionThatDoesNotOverflowThenDoNotSetOverflow() {
+        runtime.getCpu().setStatusCarry();
+        runtime.getCpu().setAccumulator((byte) 0xFE);
+
+        var result = InstructionFunctions.subtractMemoryFromAccumulator(runtime, (byte) 1);
+
+        Assertions.assertEquals((byte) 0xFD, result);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+        Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
+    }
+
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);

@@ -82,8 +82,16 @@ public enum OpCodes {
     CLV(0xB8, Instructions.CLV, AddressingMode.Implied, 2),
     BNE(0xD0, Instructions.BNE, AddressingMode.Relative, 2),
     CLD(0xD8, Instructions.CLD, AddressingMode.Implied, 2),
+    SBCIX(0xE1, Instructions.SBC, AddressingMode.IndirectX, 6),
+    SBCZ(0xE5, Instructions.SBC, AddressingMode.ZeroPage, 3),
+    SBCI(0xE9, Instructions.SBC, AddressingMode.Immediate, 2),
+    SBCA(0xED, Instructions.SBC, AddressingMode.Absolute, 4),
     BEQ(0xF0, Instructions.BEQ, AddressingMode.Relative, 2),
-    SED(0xF8, Instructions.SED, AddressingMode.Implied, 2);
+    SBCIY(0xF1, Instructions.SBC, AddressingMode.IndirectY, 5),
+    SBCZX(0xF5, Instructions.SBC, AddressingMode.ZeroPageX, 4),
+    SBCAX(0xFD, Instructions.SBC, AddressingMode.AbsoluteX, 4),
+    SED(0xF8, Instructions.SED, AddressingMode.Implied, 2),
+    SBCAY(0xF9, Instructions.SBC, AddressingMode.AbsoluteY, 4);
 
     private final byte code;
     private final Instructions instruction;
