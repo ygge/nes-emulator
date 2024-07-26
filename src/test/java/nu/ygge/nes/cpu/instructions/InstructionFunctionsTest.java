@@ -459,6 +459,22 @@ class InstructionFunctionsTest {
         Assertions.assertEquals((byte) 26, runtime.getCpu().getStackPointer());
     }
 
+    @Test
+    void givenValueToLoadRegisterXThenSetValueInRegisterX() {
+        var ret = InstructionFunctions.loadRegisterX(runtime, (byte) 0xFF);
+
+        Assertions.assertEquals((byte) 0xFF, ret);
+        Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenValueToLoadRegisterYThenSetValueInRegisterY() {
+        var ret = InstructionFunctions.loadRegisterY(runtime, (byte) 0x7F);
+
+        Assertions.assertEquals((byte) 0x7F, ret);
+        Assertions.assertEquals((byte) 0x7F, runtime.getCpu().getRegisterY());
+    }
+
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);
