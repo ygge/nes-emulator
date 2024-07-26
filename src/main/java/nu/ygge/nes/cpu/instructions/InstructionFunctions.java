@@ -106,6 +106,26 @@ public final class InstructionFunctions {
         runtime.getCpu().setAccumulator(pullFromStack(runtime));
     }
 
+    public static byte addMemoryToAccumulator(NESRuntime runtime, byte value) {
+        var sum = toInt(runtime.getCpu().getAccumulator());
+        sum += runtime.getCpu().isStatusCarry() ? 1 : 0;
+        sum += value;
+        if ((runtime.getCpu().getAccumulator()&0x80) == (value&0x80)) {
+            if ((sum&0x80) == (value&0x80)) {
+                runtime.getCpu().clearStatusOverflow();
+            } else {
+                runtime.getCpu().setStatusOverflow();
+            }
+        }
+        if ((sum&0x100) > 0) {
+            runtime.getCpu().setStatusCarry();
+            sum -= 0x100;
+        } else {
+            runtime.getCpu().clearStatusCarry();
+        }
+        return (byte) sum;
+    }
+
     private static byte pullFromStack(NESRuntime runtime) {
         var address = getStackPointerAddress(runtime);
         runtime.getCpu().incrementStackPointer();

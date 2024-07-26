@@ -253,6 +253,61 @@ class InstructionFunctionsTest {
         Assertions.assertThrows(NESException.class, () -> verifyPullAccumulator(0xFF, 0));
     }
 
+    @Test
+    void givenAdditionThatFitsInTheResultingBitsThenNoCarry() {
+        runtime.getCpu().setAccumulator((byte) 0xFE);
+
+        var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0x1);
+
+        Assertions.assertEquals((byte) 0xFF, result);
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+    }
+
+    @Test
+    void givenAdditionThatFitsInTheResultingBitsWithCarryThatDoesNotThenSetCarry() {
+        runtime.getCpu().setAccumulator((byte) 0xFE);
+
+        var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0x3);
+
+        Assertions.assertEquals((byte) 1, result);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+        Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
+    }
+
+    @Test
+    void givenAdditionThatDoesNotFitInTheResultingBitsThenSetCarry() {
+        runtime.getCpu().setStatusCarry();
+        runtime.getCpu().setAccumulator((byte) 0xFE);
+
+        var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0x1);
+
+        Assertions.assertEquals((byte) 0, result);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+        Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
+    }
+
+    @Test
+    void givenAdditionWithSignedValuesThatDoesNotOverflowThenDoNotSetOverflow() {
+        runtime.getCpu().setAccumulator((byte) 0x7E);
+
+        var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0xFB);
+
+        Assertions.assertEquals((byte) 0x79, result);
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+        Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
+    }
+
+    @Test
+    void givenAdditionWithSignedValuesThatOverflowsThenSetOverflow() {
+        runtime.getCpu().setAccumulator((byte) 0x80);
+
+        var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0xFB);
+
+        Assertions.assertEquals((byte) 0x7B, result);
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+        Assertions.assertTrue(runtime.getCpu().isStatusOverflow());
+    }
+
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);
