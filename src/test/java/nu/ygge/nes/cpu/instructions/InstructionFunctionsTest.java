@@ -160,6 +160,7 @@ class InstructionFunctionsTest {
     void givenEmptyStackToPullProcessorStatusThenThrowException() {
         Assertions.assertThrows(NESException.class, () -> verifyPullProcessorStatus(0xFF, 0));
     }
+
     @Test
     void givenZeroAndPositiveValueToExclusiveOrMemoryWithAccumulatorThenSetAccumulatorToResult() {
         verifyExclusiveOrMemoryWithAccumulator(0, 42, 42);
@@ -220,6 +221,54 @@ class InstructionFunctionsTest {
     @Test
     void givenAllButLeastSignificantBitSetToRotateRightOneBitThenDoNotSetCarry() {
         verifyRotateRightOneBit(0xFE, 0x7F, false);
+    }
+
+    @Test
+    void givenEmptyStackToPushAccumulatorThenPushAccumulator() {
+        verifyPushAccumulator(0xFF, 0x34);
+    }
+
+    @Test
+    void givenAlmostFullStackToPushAccumulatorThenPushAccumulator() {
+        verifyPushAccumulator(1, 0x76);
+    }
+
+    @Test
+    void givenFullStackToPushAccumulatorThenThrowException() {
+        Assertions.assertThrows(NESException.class, () -> verifyPushAccumulator(0, 0));
+    }
+
+    @Test
+    void givenFullStackToPullAccumulatorThenPullAccumulator() {
+        verifyPullAccumulator(0, 0xF0);
+    }
+
+    @Test
+    void givenAlmostEmptyStackToPullAccumulatorThenPullAccumulator() {
+        verifyPullAccumulator(0xFE, 1);
+    }
+
+    @Test
+    void givenEmptyStackToPullAccumulatorThenThrowException() {
+        Assertions.assertThrows(NESException.class, () -> verifyPullAccumulator(0xFF, 0));
+    }
+
+    private void verifyPullAccumulator(int stackPointer, int accumulator) {
+        runtime.getCpu().setStackPointer((byte) stackPointer);
+        runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);
+        InstructionFunctions.pullAccumulatorFromStack(runtime);
+
+        Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());
+        Assertions.assertEquals((byte) accumulator, runtime.getCpu().getAccumulator());
+    }
+
+    private void verifyPushAccumulator(int stackPointer, int accumulator) {
+        runtime.getCpu().setAccumulator((byte) accumulator);
+        runtime.getCpu().setStackPointer((byte) stackPointer);
+        InstructionFunctions.pushAccumulatorOnStack(runtime);
+
+        Assertions.assertEquals((byte) (stackPointer - 1), runtime.getCpu().getStackPointer());
+        Assertions.assertEquals(accumulator, runtime.getMemory().read(0x100 | stackPointer));
     }
 
     private void verifyRotateRightOneBit(int intValue, int intResult, boolean carrySet) {

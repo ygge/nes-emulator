@@ -28,9 +28,7 @@ public final class InstructionFunctions {
     }
 
     public static void pushProcessorStatusOnStack(NESRuntime runtime) {
-        var address = getStackPointerAddress(runtime);
-        runtime.getCpu().decrementStackPointer();
-        runtime.getMemory().write(address, runtime.getCpu().getStatusRegister());
+        pushToStack(runtime, runtime.getCpu().getStatusRegister());
     }
 
     public static byte andMemoryWithAccumulator(NESRuntime runtime, byte value) {
@@ -67,9 +65,7 @@ public final class InstructionFunctions {
     }
 
     public static void pullProcessorStatusFromStack(NESRuntime runtime) {
-        var address = getStackPointerAddress(runtime);
-        runtime.getCpu().incrementStackPointer();
-        runtime.getCpu().setStatusRegister(runtime.getMemory().read(address));
+        runtime.getCpu().setStatusRegister(pullFromStack(runtime));
     }
 
     public static byte exclusiveOrMemoryWithAccumulator(NESRuntime runtime, byte value) {
@@ -100,6 +96,26 @@ public final class InstructionFunctions {
             v |= 0x80;
         }
         return (byte)v;
+    }
+
+    public static void pushAccumulatorOnStack(NESRuntime runtime) {
+        pushToStack(runtime, runtime.getCpu().getAccumulator());
+    }
+
+    public static void pullAccumulatorFromStack(NESRuntime runtime) {
+        runtime.getCpu().setAccumulator(pullFromStack(runtime));
+    }
+
+    private static byte pullFromStack(NESRuntime runtime) {
+        var address = getStackPointerAddress(runtime);
+        runtime.getCpu().incrementStackPointer();
+        return runtime.getMemory().read(address);
+    }
+
+    private static void pushToStack(NESRuntime runtime, byte value) {
+        var address = getStackPointerAddress(runtime);
+        runtime.getCpu().decrementStackPointer();
+        runtime.getMemory().write(address, value);
     }
 
     private static int toInt(byte value) {
