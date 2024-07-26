@@ -36,7 +36,9 @@ public enum Instructions {
     SEC("Set carry flag", (NESRuntime runtime) -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", (NESRuntime runtime) -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt()),
-    STA("Store Accumulator in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getAccumulator(), WriteValue.AccumulatorOrMemory);
+    STA("Store Accumulator in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getAccumulator(), WriteValue.Memory),
+    STX("Store Index X in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterX(), WriteValue.Memory),
+    STY("Store Index Y in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterY(), WriteValue.Memory);
 
     private final String description;
     private final StatusFlagsAffected statusFlagsAffected;

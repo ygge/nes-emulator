@@ -34,7 +34,9 @@ public class OpCode {
         } else if (addressingMode == AddressingMode.Accumulator) {
             var result = instruction.getSingleArgumentInstruction().perform(runtime, runtime.getCpu().getAccumulator());
             setStatusFlags(runtime.getCpu(), result);
-            if (instruction.getWriteValue() != WriteValue.None) {
+            if (instruction.getWriteValue() == WriteValue.Memory) {
+                throw new IllegalStateException("Accumulator access mode may not write to memory");
+            } else if (instruction.getWriteValue() != WriteValue.None) {
                 runtime.getCpu().setAccumulator(result);
             }
         } else if (addressingMode == AddressingMode.Immediate) {
@@ -95,7 +97,7 @@ public class OpCode {
     private void writeValue(NESRuntime runtime, int address, byte result) {
         switch (instruction.getWriteValue()) {
             case Accumulator -> runtime.getCpu().setAccumulator(result);
-            case AccumulatorOrMemory -> runtime.getMemory().write(address, result);
+            case Memory, AccumulatorOrMemory -> runtime.getMemory().write(address, result);
         }
     }
 
