@@ -177,6 +177,16 @@ public final class InstructionFunctions {
         return value;
     }
 
+    public static byte transferStackPointerToRegisterX(NESRuntime runtime) {
+        var value = runtime.getCpu().getStackPointer();
+        runtime.getCpu().setRegisterX(value);
+        return value;
+    }
+
+    public static void transferRegisterXToStackPointer(NESRuntime runtime) {
+        runtime.getCpu().setStackPointer(runtime.getCpu().getRegisterX());
+    }
+
     private static int add(NESRuntime runtime, byte value, boolean addOne) {
         var sum = toInt(runtime.getCpu().getAccumulator());
         sum += addOne ? 1 : 0;

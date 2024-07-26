@@ -324,8 +324,9 @@ class InstructionFunctionsTest {
     void givenZeroToIncrementRegisterXThenSetOne() {
         runtime.getCpu().setRegisterX((byte) 0);
 
-        InstructionFunctions.incrementRegisterX(runtime);
+        var value = InstructionFunctions.incrementRegisterX(runtime);
 
+        Assertions.assertEquals((byte) 1, value);
         Assertions.assertEquals((byte) 1, runtime.getCpu().getRegisterX());
     }
 
@@ -333,8 +334,9 @@ class InstructionFunctionsTest {
     void givenMinus1ToIncrementRegisterXThenSetZero() {
         runtime.getCpu().setRegisterX((byte) 0xFF);
 
-        InstructionFunctions.incrementRegisterX(runtime);
+        var value = InstructionFunctions.incrementRegisterX(runtime);
 
+        Assertions.assertEquals((byte) 0, value);
         Assertions.assertEquals((byte) 0, runtime.getCpu().getRegisterX());
     }
 
@@ -342,8 +344,9 @@ class InstructionFunctionsTest {
     void givenZeroToIncrementRegisterYThenSetOne() {
         runtime.getCpu().setRegisterY((byte) 0);
 
-        InstructionFunctions.incrementRegisterY(runtime);
+        var value = InstructionFunctions.incrementRegisterY(runtime);
 
+        Assertions.assertEquals((byte) 1, value);
         Assertions.assertEquals((byte) 1, runtime.getCpu().getRegisterY());
     }
 
@@ -351,8 +354,9 @@ class InstructionFunctionsTest {
     void givenMinus1ToIncrementRegisterYThenSetZero() {
         runtime.getCpu().setRegisterY((byte) 0xFF);
 
-        InstructionFunctions.incrementRegisterY(runtime);
+        var value = InstructionFunctions.incrementRegisterY(runtime);
 
+        Assertions.assertEquals((byte) 0, value);
         Assertions.assertEquals((byte) 0, runtime.getCpu().getRegisterY());
     }
 
@@ -360,8 +364,9 @@ class InstructionFunctionsTest {
     void givenZeroToInDecrementRegisterXThenSetMinusOne() {
         runtime.getCpu().setRegisterX((byte) 0);
 
-        InstructionFunctions.decrementRegisterX(runtime);
+        var value = InstructionFunctions.decrementRegisterX(runtime);
 
+        Assertions.assertEquals((byte) 0xFF, value);
         Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterX());
     }
 
@@ -369,8 +374,9 @@ class InstructionFunctionsTest {
     void givenMinus1ToDecrementRegisterXThenSetMinusTwo() {
         runtime.getCpu().setRegisterX((byte) 0xFF);
 
-        InstructionFunctions.decrementRegisterX(runtime);
+        var value = InstructionFunctions.decrementRegisterX(runtime);
 
+        Assertions.assertEquals((byte) 0xFE, value);
         Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getRegisterX());
     }
 
@@ -378,8 +384,9 @@ class InstructionFunctionsTest {
     void givenZeroToInDecrementRegisterYThenSetMinusOne() {
         runtime.getCpu().setRegisterY((byte) 0);
 
-        InstructionFunctions.decrementRegisterY(runtime);
+        var value = InstructionFunctions.decrementRegisterY(runtime);
 
+        Assertions.assertEquals((byte) 0xFF, value);
         Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterY());
     }
 
@@ -387,8 +394,9 @@ class InstructionFunctionsTest {
     void givenMinus1ToDecrementRegisterYThenSetMinusTwo() {
         runtime.getCpu().setRegisterY((byte) 0xFF);
 
-        InstructionFunctions.decrementRegisterY(runtime);
+        var value = InstructionFunctions.decrementRegisterY(runtime);
 
+        Assertions.assertEquals((byte) 0xFE, value);
         Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getRegisterY());
     }
 
@@ -396,8 +404,9 @@ class InstructionFunctionsTest {
     void givenValueInAccumulatorToTransferAccumulatorToRegisterXThenSetValueInRegisterX() {
         runtime.getCpu().setAccumulator((byte) 0xFF);
 
-        InstructionFunctions.transferAccumulatorToRegisterX(runtime);
+        var value = InstructionFunctions.transferAccumulatorToRegisterX(runtime);
 
+        Assertions.assertEquals((byte) 0xFF, value);
         Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterX());
     }
 
@@ -405,8 +414,9 @@ class InstructionFunctionsTest {
     void givenValueInAccumulatorToTransferAccumulatorToRegisterYThenSetValueInRegisterX() {
         runtime.getCpu().setAccumulator((byte) 0x80);
 
-        InstructionFunctions.transferAccumulatorToRegisterY(runtime);
+        var value = InstructionFunctions.transferAccumulatorToRegisterY(runtime);
 
+        Assertions.assertEquals((byte) 0x80, value);
         Assertions.assertEquals((byte) 0x80, runtime.getCpu().getRegisterY());
     }
 
@@ -414,8 +424,9 @@ class InstructionFunctionsTest {
     void givenValueInRegisterXToTransferRegisterXToAccumulatorThenSetValueInAccumulator() {
         runtime.getCpu().setRegisterX((byte) 42);
 
-        InstructionFunctions.transferRegisterXToAccumulator(runtime);
+        var value = InstructionFunctions.transferRegisterXToAccumulator(runtime);
 
+        Assertions.assertEquals((byte) 42, value);
         Assertions.assertEquals((byte) 42, runtime.getCpu().getAccumulator());
     }
 
@@ -423,9 +434,29 @@ class InstructionFunctionsTest {
     void givenValueInRegisterYToTransferRegisterYToAccumulatorThenSetValueInAccumulator() {
         runtime.getCpu().setRegisterY((byte) 17);
 
-        InstructionFunctions.transferRegisterYToAccumulator(runtime);
+        var value = InstructionFunctions.transferRegisterYToAccumulator(runtime);
 
+        Assertions.assertEquals((byte) 17, value);
         Assertions.assertEquals((byte) 17, runtime.getCpu().getRegisterY());
+    }
+
+    @Test
+    void givenValueInStackPointerToTransferStackPointerToRegisterXThenSetValueInRegisterX() {
+        runtime.getCpu().setStackPointer((byte) 111);
+
+        var value = InstructionFunctions.transferStackPointerToRegisterX(runtime);
+
+        Assertions.assertEquals((byte) 111, value);
+        Assertions.assertEquals((byte) 111, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenValueInRegisterXToTransferRegisterXToStackPointerThenSetValueInStackPointer() {
+        runtime.getCpu().setRegisterX((byte) 26);
+
+        InstructionFunctions.transferRegisterXToStackPointer(runtime);
+
+        Assertions.assertEquals((byte) 26, runtime.getCpu().getStackPointer());
     }
 
     private void verifyPullAccumulator(int stackPointer, int accumulator) {

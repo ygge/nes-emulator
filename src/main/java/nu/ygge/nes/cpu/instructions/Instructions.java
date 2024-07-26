@@ -45,7 +45,9 @@ public enum Instructions {
     STY("Store Index Y in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterY(), WriteValue.Memory),
     TAX("Transfer Accumulator to Index X", InstructionFunctions::transferAccumulatorToRegisterX, StatusFlagsAffected.STANDARD),
     TAY("Transfer Accumulator to Index Y", InstructionFunctions::transferAccumulatorToRegisterY, StatusFlagsAffected.STANDARD),
+    TSX("Transfer Stack Pointer to Index X", InstructionFunctions::transferStackPointerToRegisterX, StatusFlagsAffected.STANDARD),
     TXA("Transfer Index X to Accumulator", InstructionFunctions::transferRegisterXToAccumulator, StatusFlagsAffected.STANDARD),
+    TXS("Transfer Index X to Stack Pointer", InstructionFunctions::transferRegisterXToStackPointer),
     TYA("Transfer Index Y to Accumulator", InstructionFunctions::transferRegisterYToAccumulator, StatusFlagsAffected.STANDARD);
 
     private final String description;
