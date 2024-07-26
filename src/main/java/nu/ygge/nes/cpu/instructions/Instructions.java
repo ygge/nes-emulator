@@ -42,7 +42,11 @@ public enum Instructions {
     SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt()),
     STA("Store Accumulator in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getAccumulator(), WriteValue.Memory),
     STX("Store Index X in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterX(), WriteValue.Memory),
-    STY("Store Index Y in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterY(), WriteValue.Memory);
+    STY("Store Index Y in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterY(), WriteValue.Memory),
+    TAX("Transfer Accumulator to Index X", InstructionFunctions::transferAccumulatorToRegisterX, StatusFlagsAffected.STANDARD),
+    TAY("Transfer Accumulator to Index Y", InstructionFunctions::transferAccumulatorToRegisterY, StatusFlagsAffected.STANDARD),
+    TXA("Transfer Index X to Accumulator", InstructionFunctions::transferRegisterXToAccumulator, StatusFlagsAffected.STANDARD),
+    TYA("Transfer Index Y to Accumulator", InstructionFunctions::transferRegisterYToAccumulator, StatusFlagsAffected.STANDARD);
 
     private final String description;
     private final StatusFlagsAffected statusFlagsAffected;

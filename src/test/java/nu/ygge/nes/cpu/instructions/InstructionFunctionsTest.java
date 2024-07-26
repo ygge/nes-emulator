@@ -392,6 +392,42 @@ class InstructionFunctionsTest {
         Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getRegisterY());
     }
 
+    @Test
+    void givenValueInAccumulatorToTransferAccumulatorToRegisterXThenSetValueInRegisterX() {
+        runtime.getCpu().setAccumulator((byte) 0xFF);
+
+        InstructionFunctions.transferAccumulatorToRegisterX(runtime);
+
+        Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenValueInAccumulatorToTransferAccumulatorToRegisterYThenSetValueInRegisterX() {
+        runtime.getCpu().setAccumulator((byte) 0x80);
+
+        InstructionFunctions.transferAccumulatorToRegisterY(runtime);
+
+        Assertions.assertEquals((byte) 0x80, runtime.getCpu().getRegisterY());
+    }
+
+    @Test
+    void givenValueInRegisterXToTransferRegisterXToAccumulatorThenSetValueInAccumulator() {
+        runtime.getCpu().setRegisterX((byte) 42);
+
+        InstructionFunctions.transferRegisterXToAccumulator(runtime);
+
+        Assertions.assertEquals((byte) 42, runtime.getCpu().getAccumulator());
+    }
+
+    @Test
+    void givenValueInRegisterYToTransferRegisterYToAccumulatorThenSetValueInAccumulator() {
+        runtime.getCpu().setRegisterY((byte) 17);
+
+        InstructionFunctions.transferRegisterYToAccumulator(runtime);
+
+        Assertions.assertEquals((byte) 17, runtime.getCpu().getRegisterY());
+    }
+
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);

@@ -153,6 +153,30 @@ public final class InstructionFunctions {
         return newValue;
     }
 
+    public static byte transferAccumulatorToRegisterX(NESRuntime runtime) {
+        var value = runtime.getCpu().getAccumulator();
+        runtime.getCpu().setRegisterX(value);
+        return value;
+    }
+
+    public static byte transferAccumulatorToRegisterY(NESRuntime runtime) {
+        var value = runtime.getCpu().getAccumulator();
+        runtime.getCpu().setRegisterY(value);
+        return value;
+    }
+
+    public static byte transferRegisterXToAccumulator(NESRuntime runtime) {
+        var value = runtime.getCpu().getRegisterX();
+        runtime.getCpu().setAccumulator(value);
+        return value;
+    }
+
+    public static byte transferRegisterYToAccumulator(NESRuntime runtime) {
+        var value = runtime.getCpu().getRegisterY();
+        runtime.getCpu().setAccumulator(value);
+        return value;
+    }
+
     private static int add(NESRuntime runtime, byte value, boolean addOne) {
         var sum = toInt(runtime.getCpu().getAccumulator());
         sum += addOne ? 1 : 0;
