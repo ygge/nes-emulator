@@ -125,7 +125,7 @@ public class OpCode {
 
     private int toAddress(byte eb1, byte eb2) {
         int address = toInt(eb1);
-        return (address << 8) | eb2;
+        return (address << 8) | toInt(eb2);
     }
 
     private static int toInt(byte eb1) {

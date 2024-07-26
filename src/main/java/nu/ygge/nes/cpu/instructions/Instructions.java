@@ -35,7 +35,8 @@ public enum Instructions {
     SBC("Subtract Memory from Accumulator with Borrow", StatusFlagsAffected.STANDARD, InstructionFunctions::subtractMemoryFromAccumulator, WriteValue.Accumulator),
     SEC("Set carry flag", (NESRuntime runtime) -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", (NESRuntime runtime) -> runtime.getCpu().setStatusDecimal()),
-    SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt());
+    SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt()),
+    STA("Store Accumulator in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getAccumulator(), WriteValue.AccumulatorOrMemory);
 
     private final String description;
     private final StatusFlagsAffected statusFlagsAffected;
