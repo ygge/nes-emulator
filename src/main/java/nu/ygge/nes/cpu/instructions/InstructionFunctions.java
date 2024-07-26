@@ -107,9 +107,7 @@ public final class InstructionFunctions {
     }
 
     public static byte addMemoryToAccumulator(NESRuntime runtime, byte value) {
-        var sum = toInt(runtime.getCpu().getAccumulator());
-        sum += runtime.getCpu().isStatusCarry() ? 1 : 0;
-        sum += value;
+        var sum = add(runtime, value, runtime.getCpu().isStatusCarry());
         if ((runtime.getCpu().getAccumulator()&0x80) == (value&0x80)) {
             if ((sum&0x80) == (value&0x80)) {
                 runtime.getCpu().clearStatusOverflow();
@@ -127,7 +125,15 @@ public final class InstructionFunctions {
     }
 
     public static byte subtractMemoryFromAccumulator(NESRuntime runtime, byte value) {
-        return addMemoryToAccumulator(runtime, (byte)(-value + 1));
+        var result = add(runtime, (byte)(~value + 1), !runtime.getCpu().isStatusCarry());
+        return (byte) result;
+    }
+
+    private static int add(NESRuntime runtime, byte value, boolean addOne) {
+        var sum = toInt(runtime.getCpu().getAccumulator());
+        sum += addOne ? 1 : 0;
+        sum += value;
+        return sum;
     }
 
     private static byte pullFromStack(NESRuntime runtime) {
