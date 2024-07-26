@@ -30,7 +30,12 @@ public class OpCode {
 
     public void perform(NESRuntime runtime, byte eb1, byte eb2) {
         if (addressingMode == AddressingMode.Implied) {
-            instruction.getNoArgumentInstruction().perform(runtime);
+            if (instruction.getNoArgumentInstruction() != null) {
+                instruction.getNoArgumentInstruction().perform(runtime);
+            } else {
+                var result = instruction.getNoArgumentWithReturnInstruction().perform(runtime);
+                setStatusFlags(runtime.getCpu(), result);
+            }
         } else if (addressingMode == AddressingMode.Accumulator) {
             var result = instruction.getSingleArgumentInstruction().perform(runtime, runtime.getCpu().getAccumulator());
             setStatusFlags(runtime.getCpu(), result);

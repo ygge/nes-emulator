@@ -22,7 +22,11 @@ public enum Instructions {
     CLD("Clear decimal mode", (NESRuntime runtime) -> runtime.getCpu().clearStatusDecimal()),
     CLI("Clear interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().clearStatusInterrupt()),
     CLV("Clear overflow flag", (NESRuntime runtime) -> runtime.getCpu().clearStatusOverflow()),
+    DEX("Decrement Index X by One", InstructionFunctions::decrementRegisterX, StatusFlagsAffected.STANDARD),
+    DEY("Decrement Index Y by One", InstructionFunctions::decrementRegisterY, StatusFlagsAffected.STANDARD),
     EOR("Exclusive-OR Memory with Accumulator", StatusFlagsAffected.STANDARD, InstructionFunctions::exclusiveOrMemoryWithAccumulator, WriteValue.Accumulator),
+    INX("Increment Index X by One", InstructionFunctions::incrementRegisterX, StatusFlagsAffected.STANDARD),
+    INY("Increment Index Y by One", InstructionFunctions::incrementRegisterY, StatusFlagsAffected.STANDARD),
     LDA("Load accumulator with memory", StatusFlagsAffected.STANDARD, InstructionFunctions::loadAccumulator),
     LSR("Shift Right One Bit", StatusFlagsAffected.STANDARD, InstructionFunctions::shiftRightOneBit, WriteValue.AccumulatorOrMemory),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.STANDARD, InstructionFunctions::orMemoryWithAccumulator, WriteValue.Accumulator),
@@ -43,6 +47,7 @@ public enum Instructions {
     private final String description;
     private final StatusFlagsAffected statusFlagsAffected;
     private final NoArgumentInstruction noArgumentInstruction;
+    private final NoArgumentWithReturnInstruction noArgumentWithReturnInstruction;
     private final SingleArgumentInstruction singleArgumentInstruction;
     private final BranchingInstruction branchingInstruction;
     private final WriteValue writeValue;
@@ -51,6 +56,17 @@ public enum Instructions {
         this.description = description;
         this.statusFlagsAffected = StatusFlagsAffected.NONE;
         this.noArgumentInstruction = noArgumentInstruction;
+        this.noArgumentWithReturnInstruction = null;
+        this.singleArgumentInstruction = null;
+        branchingInstruction = null;
+        writeValue = WriteValue.None;
+    }
+
+    Instructions(String description, NoArgumentWithReturnInstruction noArgumentWithReturnInstruction, StatusFlagsAffected statusFlagsAffected) {
+        this.description = description;
+        this.statusFlagsAffected = statusFlagsAffected;
+        this.noArgumentInstruction = null;
+        this.noArgumentWithReturnInstruction = noArgumentWithReturnInstruction;
         this.singleArgumentInstruction = null;
         branchingInstruction = null;
         writeValue = WriteValue.None;
@@ -64,6 +80,7 @@ public enum Instructions {
         this.description = description;
         this.statusFlagsAffected = statusFlagsAffected;
         this.noArgumentInstruction = null;
+        this.noArgumentWithReturnInstruction = null;
         this.singleArgumentInstruction = singleArgumentInstruction;
         branchingInstruction = null;
         this.writeValue = writeValue;
@@ -73,6 +90,7 @@ public enum Instructions {
         this.description = description;
         this.statusFlagsAffected = StatusFlagsAffected.NONE;
         this.noArgumentInstruction = null;
+        this.noArgumentWithReturnInstruction = null;
         this.singleArgumentInstruction = null;
         this.branchingInstruction = branchingInstruction;
         this.writeValue = WriteValue.None;

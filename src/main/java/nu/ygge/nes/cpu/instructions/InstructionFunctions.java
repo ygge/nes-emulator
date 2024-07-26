@@ -129,6 +129,30 @@ public final class InstructionFunctions {
         return (byte) result;
     }
 
+    public static byte incrementRegisterX(NESRuntime runtime) {
+        byte newValue = (byte) (runtime.getCpu().getRegisterX() + 1);
+        runtime.getCpu().setRegisterX(newValue);
+        return newValue;
+    }
+
+    public static byte incrementRegisterY(NESRuntime runtime) {
+        byte newValue = (byte) (runtime.getCpu().getRegisterY() + 1);
+        runtime.getCpu().setRegisterY(newValue);
+        return newValue;
+    }
+
+    public static byte decrementRegisterX(NESRuntime runtime) {
+        byte newValue = (byte) (runtime.getCpu().getRegisterX() - 1);
+        runtime.getCpu().setRegisterX(newValue);
+        return newValue;
+    }
+
+    public static byte decrementRegisterY(NESRuntime runtime) {
+        byte newValue = (byte) (runtime.getCpu().getRegisterY() - 1);
+        runtime.getCpu().setRegisterY(newValue);
+        return newValue;
+    }
+
     private static int add(NESRuntime runtime, byte value, boolean addOne) {
         var sum = toInt(runtime.getCpu().getAccumulator());
         sum += addOne ? 1 : 0;

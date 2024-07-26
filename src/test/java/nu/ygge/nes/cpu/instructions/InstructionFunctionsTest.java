@@ -320,6 +320,78 @@ class InstructionFunctionsTest {
         Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
     }
 
+    @Test
+    void givenZeroToIncrementRegisterXThenSetOne() {
+        runtime.getCpu().setRegisterX((byte) 0);
+
+        InstructionFunctions.incrementRegisterX(runtime);
+
+        Assertions.assertEquals((byte) 1, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenMinus1ToIncrementRegisterXThenSetZero() {
+        runtime.getCpu().setRegisterX((byte) 0xFF);
+
+        InstructionFunctions.incrementRegisterX(runtime);
+
+        Assertions.assertEquals((byte) 0, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenZeroToIncrementRegisterYThenSetOne() {
+        runtime.getCpu().setRegisterY((byte) 0);
+
+        InstructionFunctions.incrementRegisterY(runtime);
+
+        Assertions.assertEquals((byte) 1, runtime.getCpu().getRegisterY());
+    }
+
+    @Test
+    void givenMinus1ToIncrementRegisterYThenSetZero() {
+        runtime.getCpu().setRegisterY((byte) 0xFF);
+
+        InstructionFunctions.incrementRegisterY(runtime);
+
+        Assertions.assertEquals((byte) 0, runtime.getCpu().getRegisterY());
+    }
+
+    @Test
+    void givenZeroToInDecrementRegisterXThenSetMinusOne() {
+        runtime.getCpu().setRegisterX((byte) 0);
+
+        InstructionFunctions.decrementRegisterX(runtime);
+
+        Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenMinus1ToDecrementRegisterXThenSetMinusTwo() {
+        runtime.getCpu().setRegisterX((byte) 0xFF);
+
+        InstructionFunctions.decrementRegisterX(runtime);
+
+        Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getRegisterX());
+    }
+
+    @Test
+    void givenZeroToInDecrementRegisterYThenSetMinusOne() {
+        runtime.getCpu().setRegisterY((byte) 0);
+
+        InstructionFunctions.decrementRegisterY(runtime);
+
+        Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getRegisterY());
+    }
+
+    @Test
+    void givenMinus1ToDecrementRegisterYThenSetMinusTwo() {
+        runtime.getCpu().setRegisterY((byte) 0xFF);
+
+        InstructionFunctions.decrementRegisterY(runtime);
+
+        Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getRegisterY());
+    }
+
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);
