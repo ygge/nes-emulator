@@ -5,6 +5,11 @@ import nu.ygge.nes.emulator.exception.NESException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 class InstructionFunctionsTest {
 
@@ -475,6 +480,61 @@ class InstructionFunctionsTest {
         Assertions.assertEquals((byte) 0x7F, runtime.getCpu().getRegisterY());
     }
 
+    @ParameterizedTest
+    @EnumSource(CompareFunctions.class)
+    void givenBothArgumentsZeroToCompareFunctionsThenSetResultToZero(CompareFunctions function) {
+        function.setValue(runtime, (byte) 0);
+
+        var value = function.performValue.apply(runtime, (byte) 0);
+
+        Assertions.assertEquals((byte) 0, value);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @ParameterizedTest
+    @EnumSource(CompareFunctions.class)
+    void givenBothArgumentsNotZeroButEqualToCompareFunctionsThenSetResultToZero(CompareFunctions function) {
+        function.setValue(runtime, (byte) 0x80);
+
+        var value = function.performValue.apply(runtime, (byte) 0x80);
+
+        Assertions.assertEquals((byte) 0, value);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @ParameterizedTest
+    @EnumSource(CompareFunctions.class)
+    void givenMemoryMuchLessThanRegisterToCompareFunctionsThenNotZero(CompareFunctions function) {
+        function.setValue(runtime, (byte) 0xFF);
+
+        var value = function.performValue.apply(runtime, (byte) 0x80);
+
+        Assertions.assertEquals((byte) 0x7F, value);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @ParameterizedTest
+    @EnumSource(CompareFunctions.class)
+    void givenMemoryLessThanRegisterToCompareFunctionsThenNotZero(CompareFunctions function) {
+        function.setValue(runtime, (byte) 0x7F);
+
+        var value = function.performValue.apply(runtime, (byte) 1);
+
+        Assertions.assertEquals((byte) 0x7E, value);
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @ParameterizedTest
+    @EnumSource(CompareFunctions.class)
+    void givenMemoryGreaterThanRegisterToCompareFunctionsThenNotZero(CompareFunctions function) {
+        function.setValue(runtime, (byte) 0x30);
+
+        var value = function.performValue.apply(runtime, (byte) 0x40);
+
+        Assertions.assertEquals((byte) 0xF0, value);
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+    }
+
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
         runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);
@@ -575,5 +635,27 @@ class InstructionFunctionsTest {
 
         Assertions.assertEquals(value, ret);
         Assertions.assertEquals(value, runtime.getCpu().getAccumulator());
+    }
+
+    private enum CompareFunctions {
+        Accumulator((runtime, value) -> runtime.getCpu().setAccumulator(value), InstructionFunctions::compareMemoryWithAccumulator),
+        RegisterX((runtime, value) -> runtime.getCpu().setRegisterX(value), InstructionFunctions::compareMemoryWithRegisterX),
+        RegisterY((runtime, value) -> runtime.getCpu().setRegisterY(value), InstructionFunctions::compareMemoryWithRegisterY);
+
+        private final BiConsumer<NESRuntime, Byte> setValue;
+        private final BiFunction<NESRuntime, Byte, Byte> performValue;
+
+        CompareFunctions(BiConsumer<NESRuntime, Byte> setValue, BiFunction<NESRuntime, Byte, Byte> performValue) {
+            this.setValue = setValue;
+            this.performValue = performValue;
+        }
+
+        void setValue(NESRuntime runtime, byte value) {
+            setValue.accept(runtime, value);
+        }
+
+        byte perform(NESRuntime runtime, byte value) {
+            return performValue.apply(runtime, value);
+        }
     }
 }

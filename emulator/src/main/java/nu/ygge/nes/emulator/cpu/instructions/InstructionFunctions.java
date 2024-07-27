@@ -197,6 +197,27 @@ public final class InstructionFunctions {
         return value;
     }
 
+    public static byte compareMemoryWithAccumulator(NESRuntime runtime, byte value) {
+        return compare(runtime, runtime.getCpu().getAccumulator(), value);
+    }
+
+    public static byte compareMemoryWithRegisterX(NESRuntime runtime, byte value) {
+        return compare(runtime, runtime.getCpu().getRegisterX(), value);
+    }
+
+    public static byte compareMemoryWithRegisterY(NESRuntime runtime, byte value) {
+        return compare(runtime, runtime.getCpu().getRegisterY(), value);
+    }
+
+    private static byte compare(NESRuntime runtime, byte register, byte memory) {
+        if (register >= memory) {
+            runtime.getCpu().setStatusCarry();
+        } else {
+            runtime.getCpu().clearStatusCarry();
+        }
+        return (byte) (register - memory);
+    }
+
     private static int add(NESRuntime runtime, byte value, boolean addOne) {
         var sum = toInt(runtime.getCpu().getAccumulator());
         sum += addOne ? 1 : 0;
