@@ -17,4 +17,8 @@ public class Memory {
             ram[i + gameCodeAddress] = (byte) gameCode[i];
         }
     }
+
+    public void writeData(int gameCodeAddress, byte[] gameCode) {
+        System.arraycopy(gameCode, 0, ram, gameCodeAddress, ram.length);
+    }
 }

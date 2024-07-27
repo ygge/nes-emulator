@@ -52,6 +52,10 @@ public class NESRuntime {
         cpu.setProgramCounter(CPUUtil.toAddress(msb, lsb));
     }
 
+    public void loadGame(byte[] gameCode) {
+        memory.writeData(0x8000, gameCode);
+    }
+
     public void loadGame(short[] gameCode, int gameCodeAddress, int startAddress) {
         memory.writeData(gameCodeAddress, gameCode);
         memory.write(InterruptAddress.RESET.getStartAddress(), (byte)(startAddress & 0xFF));

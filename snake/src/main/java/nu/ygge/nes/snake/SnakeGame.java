@@ -27,20 +27,34 @@ public class SnakeGame {
             0xa6, 0x03, 0xa9, 0x00, 0x81, 0x10, 0xa2, 0x00, 0xa9, 0x01, 0x81, 0x10, 0x60, 0xa2, 0x00, 0xea,
             0xea, 0xca, 0xd0, 0xfb, 0x60
     };
-    private static final byte[][] DATA = new byte[32][32];
+    private final byte[][] data = new byte[32][32];
+    private final NESRuntime runtime;
+    private Move lastMove = null;
 
-    public static void main(String[] args) {
-        new SnakeFrame(DATA);
-        var runtime = new NESRuntime();
+    public SnakeGame() {
+        new SnakeFrame(data, move -> lastMove = move);
+        runtime = new NESRuntime();
         runtime.loadGame(GAME_CODE, 0x600, 0x600);
         runtime.reset();
-        runtime.run(() -> {
-            for (int address = 0x200; address < 0x600; ++address) {
-                var value = runtime.getMemory().read(address);
-                var index = address - 0x200;
-                DATA[index / 32][index % 32] = value;
-            }
-            return true;
-        });
+        runtime.run(this::gameLoop);
+    }
+
+    public static void main(String[] args) {
+        new SnakeGame();
+    }
+
+    private boolean gameLoop() {
+        for (int address = 0x200; address < 0x600; ++address) {
+            var value = runtime.getMemory().read(address);
+            var index = address - 0x200;
+            data[index / 32][index % 32] = value;
+        }
+        runtime.getMemory().write(0xFF, lastMove == null ? 0 : lastMove.getCode());
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
     }
 }
