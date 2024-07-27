@@ -21,7 +21,7 @@ public class CPU {
         accumulator = 0;
         registerX = 0;
         registerY = 0;
-        stackPointer = 0; // must be set to 0xFF in code
+        stackPointer = (byte) 0xFF;
         statusRegister = 0;
         cycles = 0;
     }

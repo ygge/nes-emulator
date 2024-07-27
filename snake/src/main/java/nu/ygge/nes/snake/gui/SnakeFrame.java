@@ -18,6 +18,7 @@ public class SnakeFrame extends JFrame implements KeyListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         add(new SnakePanel(data));
+        addKeyListener(this);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);

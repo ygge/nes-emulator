@@ -3,6 +3,8 @@ package nu.ygge.nes.snake;
 import nu.ygge.nes.emulator.NESRuntime;
 import nu.ygge.nes.snake.gui.SnakeFrame;
 
+import java.util.Random;
+
 public class SnakeGame {
 
     private static final short[] GAME_CODE = new short[] {
@@ -29,10 +31,13 @@ public class SnakeGame {
     };
     private final byte[][] data = new byte[32][32];
     private final NESRuntime runtime;
-    private Move lastMove = null;
+    private final Random random;
+    private final SnakeFrame snakeFrame;
+    private Move lastMove = Move.UP;
 
     public SnakeGame() {
-        new SnakeFrame(data, move -> lastMove = move);
+        random = new Random();
+        snakeFrame = new SnakeFrame(data, move -> lastMove = move);
         runtime = new NESRuntime();
         runtime.loadGame(GAME_CODE, 0x600, 0x600);
         runtime.reset();
@@ -44,14 +49,22 @@ public class SnakeGame {
     }
 
     private boolean gameLoop() {
+        boolean updated = false;
         for (int address = 0x200; address < 0x600; ++address) {
             var value = runtime.getMemory().read(address);
             var index = address - 0x200;
+            if (data[index / 32][index % 32] != value) {
+                updated = true;
+            }
             data[index / 32][index % 32] = value;
         }
-        runtime.getMemory().write(0xFF, lastMove == null ? 0 : lastMove.getCode());
+        if (updated) {
+            snakeFrame.repaint();
+        }
+        runtime.getMemory().write(0xFE, (byte) random.nextInt());
+        runtime.getMemory().write(0xFF, lastMove.getCode());
         try {
-            Thread.sleep(10);
+            Thread.sleep(0, 70000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

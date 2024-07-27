@@ -13,12 +13,12 @@ public class Memory {
     }
 
     public void writeData(int gameCodeAddress, short[] gameCode) {
-        for (int i = 0; i < ram.length; ++i) {
+        for (int i = 0; i < gameCode.length; ++i) {
             ram[i + gameCodeAddress] = (byte) gameCode[i];
         }
     }
 
     public void writeData(int gameCodeAddress, byte[] gameCode) {
-        System.arraycopy(gameCode, 0, ram, gameCodeAddress, ram.length);
+        System.arraycopy(gameCode, 0, ram, gameCodeAddress, gameCode.length);
     }
 }
