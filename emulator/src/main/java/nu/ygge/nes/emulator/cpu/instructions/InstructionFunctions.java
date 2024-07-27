@@ -232,8 +232,8 @@ public final class InstructionFunctions {
     }
 
     public static void returnFromSubroutine(NESRuntime runtime) {
-        var msb = pullFromStack(runtime);
         var lsb = pullFromStack(runtime);
+        var msb = pullFromStack(runtime);
         int address = CPUUtil.toAddress(msb, lsb);
         jumpToNewLocation(runtime, address);
     }
@@ -261,8 +261,8 @@ public final class InstructionFunctions {
     }
 
     private static void saveAddressToStack(NESRuntime runtime, int address) {
-        pushToStack(runtime, (byte) (address & 0xFF));
         pushToStack(runtime, (byte) (address >> 8));
+        pushToStack(runtime, (byte) (address & 0xFF));
     }
 
     private static byte compare(NESRuntime runtime, byte register, byte memory) {

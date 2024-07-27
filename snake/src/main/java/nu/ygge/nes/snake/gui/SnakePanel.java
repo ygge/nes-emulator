@@ -31,6 +31,7 @@ public class SnakePanel extends JPanel {
 
     private Color getColor(byte state) {
         return switch (state) {
+            case 0 -> Color.BLACK;
             case 1 -> Color.WHITE;
             case 2, 9 -> Color.GRAY;
             case 3, 10 -> Color.RED;
@@ -38,7 +39,7 @@ public class SnakePanel extends JPanel {
             case 5, 12 -> Color.BLUE;
             case 6, 13 -> Color.MAGENTA;
             case 7, 14 -> Color.YELLOW;
-            default -> Color.BLACK;
+            default -> Color.CYAN;
         };
     }
 }
