@@ -298,7 +298,7 @@ class InstructionFunctionsTest {
         var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0xFB);
 
         Assertions.assertEquals((byte) 0x79, result);
-        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
         Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
     }
 
@@ -309,7 +309,7 @@ class InstructionFunctionsTest {
         var result = InstructionFunctions.addMemoryToAccumulator(runtime, (byte) 0xFB);
 
         Assertions.assertEquals((byte) 0x7B, result);
-        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
         Assertions.assertTrue(runtime.getCpu().isStatusOverflow());
     }
 

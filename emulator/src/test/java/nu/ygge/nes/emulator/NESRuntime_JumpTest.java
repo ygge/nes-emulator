@@ -22,8 +22,8 @@ public class NESRuntime_JumpTest {
     @Test
     void verifyJumpWithAbsolutIndirect() {
         memoryWriter.write(OpCodes.JMPAI.getCode());
-        memoryWriter.write((byte) 0x12);
         memoryWriter.write((byte) 0x34);
+        memoryWriter.write((byte) 0x12);
 
         runtime.getMemory().write(0x1234, (byte) 0x78);
         runtime.getMemory().write(0x1235, (byte) 0x56);

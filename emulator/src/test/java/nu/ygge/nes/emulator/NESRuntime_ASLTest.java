@@ -39,8 +39,8 @@ public class NESRuntime_ASLTest {
     void verifyAbsoluteAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte)0);
-        runtime.getMemory().write(2, (byte)3);
+        runtime.getMemory().write(1, (byte)3);
+        runtime.getMemory().write(2, (byte)0);
         runtime.getMemory().write(3, (byte)0x80);
 
         runSingleImmediateOperation(OpCodes.ASLA);

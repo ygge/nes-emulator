@@ -22,8 +22,8 @@ public class NESRuntime_ORATest {
     void verifyImmediateAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStatusZero();
-        runtime.getCpu().setAccumulator((byte)7);
-        runtime.getMemory().write(1, (byte)0x42);
+        runtime.getCpu().setAccumulator((byte) 7);
+        runtime.getMemory().write(1, (byte) 0x42);
 
         runSingleImmediateOperation(OpCodes.ORAI);
 
@@ -37,13 +37,13 @@ public class NESRuntime_ORATest {
     @Test
     void verifyAbsoluteAddressingMode() {
         runtime.getCpu().setStatusZero();
-        runtime.getCpu().setAccumulator((byte)0xFE);
-        runtime.getMemory().write(1, (byte)2);
-        runtime.getMemory().write(2, (byte)0);
+        runtime.getCpu().setAccumulator((byte) 0xFE);
+        runtime.getMemory().write(1, (byte) 0);
+        runtime.getMemory().write(2, (byte) 2);
 
         runSingleImmediateOperation(OpCodes.ORAA);
 
-        Assertions.assertEquals((byte)0xFF, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals((byte) 0xFF, runtime.getCpu().getAccumulator());
         Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
         Assertions.assertEquals(4, runtime.getCpu().getCycles());
         Assertions.assertTrue(runtime.getCpu().isStatusNegative());
@@ -54,13 +54,13 @@ public class NESRuntime_ORATest {
     void verifyZeroPageAddressingMode() {
         runtime.getCpu().setStatusZero();
         runtime.getCpu().setStatusNegative();
-        runtime.getCpu().setAccumulator((byte)2);
-        runtime.getMemory().write(1, (byte)2);
-        runtime.getMemory().write(2, (byte)1);
+        runtime.getCpu().setAccumulator((byte) 2);
+        runtime.getMemory().write(1, (byte) 2);
+        runtime.getMemory().write(2, (byte) 1);
 
         runSingleImmediateOperation(OpCodes.ORAZ);
 
-        Assertions.assertEquals((byte)3, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals((byte) 3, runtime.getCpu().getAccumulator());
         Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
         Assertions.assertEquals(3, runtime.getCpu().getCycles());
         Assertions.assertFalse(runtime.getCpu().isStatusNegative());

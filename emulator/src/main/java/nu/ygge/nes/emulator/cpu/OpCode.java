@@ -53,25 +53,25 @@ public class OpCode {
                 throw new IllegalStateException("Immediate access mode can only store value in Accumulator");
             }
         } else if (addressingMode == AddressingMode.Absolute) {
-            performWithAddress(runtime, CPUUtil.toAddress(eb1, eb2));
+            performWithAddress(runtime, CPUUtil.toAddress(eb2, eb1));
         } else if (addressingMode == AddressingMode.ZeroPage) {
             performWithAddress(runtime, CPUUtil.toAddress((byte) 0, eb1));
         } else if (addressingMode == AddressingMode.ZeroPageX) {
             performWithAddress(runtime, toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
         } else if (addressingMode == AddressingMode.AbsoluteX) {
-            performWithAddress(runtime, CPUUtil.toAddress(eb1, eb2) + CPUUtil.toInt(runtime.getCpu().getRegisterX()));
+            performWithAddress(runtime, CPUUtil.toAddress(eb2, eb1) + CPUUtil.toInt(runtime.getCpu().getRegisterX()));
         } else if (addressingMode == AddressingMode.AbsoluteY) {
             performWithAbsoluteY(runtime, eb1, eb2);
         } else if (addressingMode == AddressingMode.AbsoluteIndirect) {
-            int address = CPUUtil.toAddress(eb1, eb2);
-            var value1 = runtime.getMemory().read(address);
-            var value2 = runtime.getMemory().read(address + 1);
-            performWithAddress(runtime, CPUUtil.toAddress(value1, value2));
+            int address = CPUUtil.toAddress(eb2, eb1);
+            var lsb = runtime.getMemory().read(address);
+            var msb = runtime.getMemory().read(address + 1);
+            performWithAddress(runtime, CPUUtil.toAddress(msb, lsb));
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
-            byte value1 = runtime.getMemory().read(address);
-            byte value2 = runtime.getMemory().read(address + 1);
-            performWithAddress(runtime, CPUUtil.toAddress(value2, value1));
+            byte lsb = runtime.getMemory().read(address);
+            byte msb = runtime.getMemory().read(address + 1);
+            performWithAddress(runtime, CPUUtil.toAddress(msb, lsb));
         } else if (addressingMode == AddressingMode.IndirectY) {
             int address = toZeroPageAddress(eb1, (byte) 0);
             byte value1 = runtime.getMemory().read(address);
@@ -99,9 +99,7 @@ public class OpCode {
 
     private void performWithAddress(NESRuntime runtime, int address) {
         if (instruction.getAddressInstruction() != null) {
-            // for address instruction we need to change the address so that it is read from LSB-format
-            var lsbAddress = (address&0xFF) << 8 | (address >> 8);
-            instruction.getAddressInstruction().perform(runtime, lsbAddress);
+            instruction.getAddressInstruction().perform(runtime, address);
         } else {
             byte value = runtime.getMemory().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
