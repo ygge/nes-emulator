@@ -242,6 +242,14 @@ public final class InstructionFunctions {
         returnFromSubroutine(runtime);
     }
 
+    public static byte incrementMemory(NESRuntime runtime, byte value) {
+        return (byte) (value + 1);
+    }
+
+    public static byte decrementMemory(NESRuntime runtime, byte value) {
+        return (byte) (value - 1);
+    }
+
     private static void saveAddressToStack(NESRuntime runtime, int address) {
         pushToStack(runtime, (byte) (address & 0xFF));
         pushToStack(runtime, (byte) (address >> 8));

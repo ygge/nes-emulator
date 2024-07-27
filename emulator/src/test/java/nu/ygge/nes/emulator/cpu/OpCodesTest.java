@@ -36,6 +36,12 @@ class OpCodesTest {
             count.put(opCode.getInstruction(), count.get(opCode.getInstruction()) + 1);
         }
         Assertions.assertEquals(List.of(), count.entrySet().stream().filter(e -> e.getValue() == 0).toList());
+/*
+        var keys = count.keySet().stream().sorted().toList();
+        for (Instructions key : keys) {
+            System.out.println(key + ": " + count.get(key));
+        }
+*/
     }
 
     private record InstructionAndAddressingMode(Instructions instruction, AddressingMode addressingMode) {
