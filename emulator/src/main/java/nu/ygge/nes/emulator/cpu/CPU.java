@@ -6,15 +6,12 @@ import nu.ygge.nes.emulator.exception.NESException;
 import nu.ygge.nes.emulator.memory.Memory;
 
 @Getter
+@Setter
 public class CPU {
 
-    @Setter
     private int programCounter;
-    @Setter
     private byte accumulator, registerX, registerY, stackPointer;
-    @Setter
     private short statusRegister;
-    @Getter
     private int cycles;
 
     public void reset() {
@@ -58,6 +55,14 @@ public class CPU {
 
     public boolean isStatusOverflow() {
         return (statusRegister & 0b1000000) != 0;
+    }
+
+    public void setStatusIgnored() {
+        statusRegister |= 0b100000;
+    }
+
+    public void clearStatusIgnored() {
+        statusRegister &= 0b11011111;
     }
 
     public void setStatusBreak() {

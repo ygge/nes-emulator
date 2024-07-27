@@ -8,7 +8,6 @@ import nu.ygge.nes.emulator.cpu.OpCode;
 import nu.ygge.nes.emulator.memory.Memory;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 @Getter
 public class NESRuntime {
@@ -52,12 +51,24 @@ public class NESRuntime {
         cpu.setProgramCounter(CPUUtil.toAddress(msb, lsb));
     }
 
-    public void loadGame(byte[] gameCode) {
-        memory.writeData(0x8000, gameCode);
+    public void loadGame(byte[] fileData) {
+        loadGame(fileData, 0x8000, null);
+    }
+
+    public void loadGame(byte[] fileData, Integer prgAddress, Integer programCounterStart) {
+        var parsedData = new NesFileLoader(fileData);
+        memory.writeData(prgAddress, parsedData.getPrgRom());
+        if (programCounterStart != null) {
+            setProgramStartCounter(programCounterStart);
+        }
     }
 
     public void loadGame(short[] gameCode, int gameCodeAddress, int startAddress) {
         memory.writeData(gameCodeAddress, gameCode);
+        setProgramStartCounter(startAddress);
+    }
+
+    private void setProgramStartCounter(int startAddress) {
         memory.write(InterruptAddress.RESET.getStartAddress(), (byte)(startAddress & 0xFF));
         memory.write(InterruptAddress.RESET.getStartAddress() + 1, (byte)(startAddress >> 8));
     }
