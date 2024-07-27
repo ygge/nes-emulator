@@ -537,7 +537,7 @@ class InstructionFunctionsTest {
 
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
-        runtime.getMemory().write(0x100 | stackPointer, (byte) accumulator);
+        runtime.getMemory().write(0x100 | (stackPointer + 1), (byte) accumulator);
         InstructionFunctions.pullAccumulatorFromStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());
@@ -576,7 +576,7 @@ class InstructionFunctionsTest {
 
     private void verifyPullProcessorStatus(int stackPointer, int statusRegister) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
-        runtime.getMemory().write(0x100 | stackPointer, (byte) statusRegister);
+        runtime.getMemory().write(0x100 | (stackPointer + 1), (byte) statusRegister);
         InstructionFunctions.pullProcessorStatusFromStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());

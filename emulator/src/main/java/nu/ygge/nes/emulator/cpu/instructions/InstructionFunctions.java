@@ -1,6 +1,8 @@
 package nu.ygge.nes.emulator.cpu.instructions;
 
 import nu.ygge.nes.emulator.NESRuntime;
+import nu.ygge.nes.emulator.cpu.CPU;
+import nu.ygge.nes.emulator.cpu.CPUUtil;
 
 public final class InstructionFunctions {
 
@@ -16,7 +18,7 @@ public final class InstructionFunctions {
     }
 
     public static byte shiftLeftOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
+        int v = CPUUtil.toInt(value);
         v <<= 1;
         if ((v&0x100) == 0) {
             runtime.getCpu().clearStatusCarry();
@@ -36,7 +38,7 @@ public final class InstructionFunctions {
     }
 
     public static byte rotateLeftOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
+        int v = CPUUtil.toInt(value);
         v <<= 1;
         if (runtime.getCpu().isStatusCarry()) {
             v |= 1;
@@ -73,7 +75,7 @@ public final class InstructionFunctions {
     }
 
     public static byte shiftRightOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
+        int v = CPUUtil.toInt(value);
         if ((v&1) == 0) {
             runtime.getCpu().clearStatusCarry();
         } else {
@@ -84,7 +86,7 @@ public final class InstructionFunctions {
     }
 
     public static byte rotateRightOneBit(NESRuntime runtime, byte value) {
-        int v = toInt(value);
+        int v = CPUUtil.toInt(value);
         var isCarry = runtime.getCpu().isStatusCarry();
         if ((v&1) == 0) {
             runtime.getCpu().clearStatusCarry();
@@ -213,6 +215,20 @@ public final class InstructionFunctions {
         runtime.getCpu().setProgramCounter(address);
     }
 
+    public static void jumpToNewLocationSavingReturnAddress(NESRuntime runtime, int address) {
+        int prevAddress = runtime.getCpu().getProgramCounter();
+        pushToStack(runtime, (byte) (prevAddress & 0xFF));
+        pushToStack(runtime, (byte) (prevAddress >> 8));
+        jumpToNewLocation(runtime, address);
+    }
+
+    public static void returnFromSubroutine(NESRuntime runtime) {
+        var msb = pullFromStack(runtime);
+        var lsb = pullFromStack(runtime);
+        int address = CPUUtil.toAddress(msb, lsb);
+        jumpToNewLocation(runtime, address);
+    }
+
     private static byte compare(NESRuntime runtime, byte register, byte memory) {
         if (register >= memory) {
             runtime.getCpu().setStatusCarry();
@@ -223,15 +239,15 @@ public final class InstructionFunctions {
     }
 
     private static int add(NESRuntime runtime, byte value, boolean addOne) {
-        var sum = toInt(runtime.getCpu().getAccumulator());
+        var sum = CPUUtil.toInt(runtime.getCpu().getAccumulator());
         sum += addOne ? 1 : 0;
         sum += value;
         return sum;
     }
 
     private static byte pullFromStack(NESRuntime runtime) {
-        var address = getStackPointerAddress(runtime);
         runtime.getCpu().incrementStackPointer();
+        var address = getStackPointerAddress(runtime);
         return runtime.getMemory().read(address);
     }
 
@@ -241,16 +257,8 @@ public final class InstructionFunctions {
         runtime.getMemory().write(address, value);
     }
 
-    private static int toInt(byte value) {
-        int v = value;
-        if (v < 0) {
-            v += 256;
-        }
-        return v;
-    }
-
     private static int getStackPointerAddress(NESRuntime runtime) {
-        int address = toInt(runtime.getCpu().getStackPointer());
+        int address = CPUUtil.toInt(runtime.getCpu().getStackPointer());
         return 0x100 | address;
     }
 }
