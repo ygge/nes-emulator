@@ -1,10 +1,10 @@
 package nu.ygge.nes.emulator.cpu;
 
 import nu.ygge.nes.emulator.cpu.instructions.Instructions;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,6 +24,18 @@ class OpCodesTest {
         for (OpCodes opcode : OpCodes.values()) {
             assertTrue(opCodes.add(new InstructionAndAddressingMode(opcode.getInstruction(), opcode.getAddressingMode())), "Duplicate opcode: " + opcode);
         }
+    }
+
+    @Test
+    void verifyAllInstructionsHaveOpCodes() {
+        Map<Instructions, Integer> count = new HashMap<>();
+        for (Instructions instruction : Instructions.values()) {
+            count.put(instruction, 0);
+        }
+        for (OpCodes opCode : OpCodes.values()) {
+            count.put(opCode.getInstruction(), count.get(opCode.getInstruction()) + 1);
+        }
+        Assertions.assertEquals(List.of(), count.entrySet().stream().filter(e -> e.getValue() == 0).toList());
     }
 
     private record InstructionAndAddressingMode(Instructions instruction, AddressingMode addressingMode) {
