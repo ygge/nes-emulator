@@ -227,15 +227,12 @@ public final class InstructionFunctions {
     }
 
     public static void jumpToNewLocationSavingReturnAddress(NESRuntime runtime, int address) {
-        saveAddressToStack(runtime, runtime.getCpu().getProgramCounter());
+        saveAddressToStack(runtime, runtime.getCpu().getProgramCounter() - 1);
         jumpToNewLocation(runtime, address);
     }
 
     public static void returnFromSubroutine(NESRuntime runtime) {
-        var lsb = pullFromStack(runtime);
-        var msb = pullFromStack(runtime);
-        int address = CPUUtil.toAddress(msb, lsb);
-        jumpToNewLocation(runtime, address);
+        returnFromCall(runtime, 1);
     }
 
     public static void forceBreak(NESRuntime runtime) {
@@ -249,7 +246,8 @@ public final class InstructionFunctions {
         var statusRegister = pullFromStack(runtime);
         runtime.getCpu().setStatusRegister(statusRegister);
         runtime.getCpu().clearStatusBreak();
-        returnFromSubroutine(runtime);
+        runtime.getCpu().setStatusIgnored();
+        returnFromCall(runtime, 0);
     }
 
     public static byte incrementMemory(NESRuntime runtime, byte value) {
@@ -258,6 +256,13 @@ public final class InstructionFunctions {
 
     public static byte decrementMemory(NESRuntime runtime, byte value) {
         return (byte) (value - 1);
+    }
+
+    private static void returnFromCall(NESRuntime runtime, int deltaAddress) {
+        var lsb = pullFromStack(runtime);
+        var msb = pullFromStack(runtime);
+        int address = CPUUtil.toAddress(msb, lsb);
+        jumpToNewLocation(runtime, address + deltaAddress);
     }
 
     private static void saveAddressToStack(NESRuntime runtime, int address) {
