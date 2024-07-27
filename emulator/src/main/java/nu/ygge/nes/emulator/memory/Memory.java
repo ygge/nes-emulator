@@ -11,4 +11,10 @@ public class Memory {
     public void write(int address, byte value) {
         ram[address] = value;
     }
+
+    public void writeData(int gameCodeAddress, short[] gameCode) {
+        for (int i = 0; i < ram.length; ++i) {
+            ram[i + gameCodeAddress] = (byte) gameCode[i];
+        }
+    }
 }

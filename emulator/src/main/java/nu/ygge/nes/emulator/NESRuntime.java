@@ -7,6 +7,9 @@ import nu.ygge.nes.emulator.cpu.InterruptAddress;
 import nu.ygge.nes.emulator.cpu.OpCode;
 import nu.ygge.nes.emulator.memory.Memory;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
 @Getter
 public class NESRuntime {
 
@@ -16,6 +19,12 @@ public class NESRuntime {
     public NESRuntime() {
         this.cpu = new CPU();
         this.memory = new Memory();
+    }
+
+    public void run(BooleanSupplier callback) {
+        while (callback.getAsBoolean()) {
+            performSingleInstruction();
+        }
     }
 
     public void performSingleInstruction() {
@@ -41,5 +50,11 @@ public class NESRuntime {
         var lsb = memory.read(interruptAddress.getStartAddress());
         var msb = memory.read(interruptAddress.getStartAddress() + 1);
         cpu.setProgramCounter(CPUUtil.toAddress(msb, lsb));
+    }
+
+    public void loadGame(short[] gameCode, int gameCodeAddress, int startAddress) {
+        memory.writeData(gameCodeAddress, gameCode);
+        memory.write(InterruptAddress.RESET.getStartAddress(), (byte)(startAddress & 0xFF));
+        memory.write(InterruptAddress.RESET.getStartAddress() + 1, (byte)(startAddress >> 8));
     }
 }
