@@ -69,7 +69,7 @@ public class NESRuntime_ImpliedAddressingModeTest {
         runSingleImpliedOperation(OpCodes.PHP, 3);
 
         Assertions.assertEquals((byte)0xFE, runtime.getCpu().getStackPointer());
-        Assertions.assertEquals(1, runtime.getMemory().read(0x100 + 0xFF));
+        Assertions.assertEquals((byte)0b110001, runtime.getMemory().read(0x100 + 0xFF));
     }
 
     @Test

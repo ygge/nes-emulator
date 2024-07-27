@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator;
 
+import nu.ygge.nes.emulator.cpu.CPUUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +35,8 @@ public class NESRuntime_nestest {
             var expectedRegisterY = Integer.parseInt(logRow.substring(60, 62), 16);
             Assertions.assertEquals((byte) expectedRegisterY, runtime.getCpu().getRegisterY(), String.format("Register Y is incorrect after %d instructions", instructions));
             var expectedStatus = Integer.parseInt(logRow.substring(65, 67), 16);
-            Assertions.assertEquals((byte) expectedStatus, runtime.getCpu().getStatusRegister(), String.format("Status register is incorrect after %d instructions", instructions));
+            Assertions.assertEquals((byte) expectedStatus, runtime.getCpu().getStatusRegister(),
+                    String.format("Status register is incorrect after %d instructions (expected %8s but got %8s)", instructions, Integer.toBinaryString(expectedStatus), Integer.toBinaryString(CPUUtil.toInt(runtime.getCpu().getStatusRegister()))));
             var expectedStackPointer = Integer.parseInt(logRow.substring(71, 73), 16);
             Assertions.assertEquals((byte) expectedStackPointer, runtime.getCpu().getStackPointer(), String.format("Stack pointer is incorrect after %d instructions", instructions));
             var expectedCycles = Integer.parseInt(logRow.substring(90));

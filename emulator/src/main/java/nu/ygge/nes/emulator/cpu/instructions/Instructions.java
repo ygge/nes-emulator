@@ -43,7 +43,7 @@ public enum Instructions {
     ORA("OR Memory with Accumulator", StatusFlagsAffected.STANDARD, InstructionFunctions::orMemoryWithAccumulator, WriteValue.Accumulator),
     PHA("Push Accumulator on Stack", InstructionFunctions::pushAccumulatorOnStack),
     PHP("Push Processor Status on Stack", InstructionFunctions::pushProcessorStatusOnStack),
-    PLA("Pull Accumulator from Stack", InstructionFunctions::pullAccumulatorFromStack),
+    PLA("Pull Accumulator from Stack", InstructionFunctions::pullAccumulatorFromStack, StatusFlagsAffected.STANDARD),
     PLP("Pull Processor Status from Stack", InstructionFunctions::pullProcessorStatusFromStack),
     ROL("Rotate One Bit Left", StatusFlagsAffected.STANDARD, InstructionFunctions::rotateLeftOneBit, WriteValue.AccumulatorOrMemory),
     ROR("Rotate One Bit Right", StatusFlagsAffected.STANDARD, InstructionFunctions::rotateRightOneBit, WriteValue.AccumulatorOrMemory),

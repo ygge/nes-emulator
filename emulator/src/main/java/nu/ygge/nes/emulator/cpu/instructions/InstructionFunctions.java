@@ -1,7 +1,6 @@
 package nu.ygge.nes.emulator.cpu.instructions;
 
 import nu.ygge.nes.emulator.NESRuntime;
-import nu.ygge.nes.emulator.cpu.CPU;
 import nu.ygge.nes.emulator.cpu.CPUUtil;
 import nu.ygge.nes.emulator.cpu.InterruptAddress;
 
@@ -31,7 +30,11 @@ public final class InstructionFunctions {
     }
 
     public static void pushProcessorStatusOnStack(NESRuntime runtime) {
+        var prevStatus = runtime.getCpu().getStatusRegister();
+        runtime.getCpu().setStatusIgnored();
+        runtime.getCpu().setStatusBreak();
         pushToStack(runtime, runtime.getCpu().getStatusRegister());
+        runtime.getCpu().setStatusRegister(prevStatus);
     }
 
     public static byte andMemoryWithAccumulator(NESRuntime runtime, byte value) {
@@ -69,6 +72,8 @@ public final class InstructionFunctions {
 
     public static void pullProcessorStatusFromStack(NESRuntime runtime) {
         runtime.getCpu().setStatusRegister(pullFromStack(runtime));
+        runtime.getCpu().clearStatusBreak();
+        runtime.getCpu().setStatusIgnored();
     }
 
     public static byte exclusiveOrMemoryWithAccumulator(NESRuntime runtime, byte value) {
@@ -105,31 +110,36 @@ public final class InstructionFunctions {
         pushToStack(runtime, runtime.getCpu().getAccumulator());
     }
 
-    public static void pullAccumulatorFromStack(NESRuntime runtime) {
+    public static byte pullAccumulatorFromStack(NESRuntime runtime) {
         runtime.getCpu().setAccumulator(pullFromStack(runtime));
+        return runtime.getCpu().getAccumulator();
     }
 
     public static byte addMemoryToAccumulator(NESRuntime runtime, byte value) {
-        var sum = add(runtime, value, runtime.getCpu().isStatusCarry());
-        if ((runtime.getCpu().getAccumulator()&0x80) == (value&0x80)) {
-            if ((sum&0x80) == (value&0x80)) {
-                runtime.getCpu().clearStatusOverflow();
-            } else {
-                runtime.getCpu().setStatusOverflow();
-            }
+        return addition(runtime, value, runtime.getCpu().isStatusCarry() ? 1 : 0);
+    }
+
+    private static byte addition(NESRuntime runtime, byte value, int delta) {
+        var sum = CPUUtil.toInt(runtime.getCpu().getAccumulator());
+        sum += delta;
+        sum += CPUUtil.toInt(value);
+        var result = (byte) sum;
+        var v = CPUUtil.toInt(value) + (delta > 1 ? delta : 0);
+        if (((result ^ v) & (result ^ CPUUtil.toInt(runtime.getCpu().getAccumulator())) & 0x80) != 0) {
+            runtime.getCpu().setStatusOverflow();
+        } else {
+            runtime.getCpu().clearStatusOverflow();
         }
-        if ((sum&0x100) > 0) {
+        if (sum > 0xff) {
             runtime.getCpu().setStatusCarry();
-            sum -= 0x100;
         } else {
             runtime.getCpu().clearStatusCarry();
         }
-        return (byte) sum;
+        return result;
     }
 
     public static byte subtractMemoryFromAccumulator(NESRuntime runtime, byte value) {
-        var result = add(runtime, (byte)(~value + 1), !runtime.getCpu().isStatusCarry());
-        return (byte) result;
+        return addition(runtime, (byte)(~value + 1), runtime.getCpu().isStatusCarry() ? 0 : 255);
     }
 
     public static byte incrementRegisterX(NESRuntime runtime) {
@@ -256,19 +266,12 @@ public final class InstructionFunctions {
     }
 
     private static byte compare(NESRuntime runtime, byte register, byte memory) {
-        if (register >= memory) {
+        if (CPUUtil.toInt(register) >= CPUUtil.toInt(memory)) {
             runtime.getCpu().setStatusCarry();
         } else {
             runtime.getCpu().clearStatusCarry();
         }
         return (byte) (register - memory);
-    }
-
-    private static int add(NESRuntime runtime, byte value, boolean addOne) {
-        var sum = CPUUtil.toInt(runtime.getCpu().getAccumulator());
-        sum += addOne ? 1 : 0;
-        sum += value;
-        return sum;
     }
 
     private static byte pullFromStack(NESRuntime runtime) {

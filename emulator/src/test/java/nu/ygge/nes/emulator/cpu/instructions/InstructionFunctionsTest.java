@@ -612,7 +612,6 @@ class InstructionFunctionsTest {
         InstructionFunctions.pushProcessorStatusOnStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer - 1), runtime.getCpu().getStackPointer());
-        Assertions.assertEquals(runtime.getCpu().getStatusRegister(), runtime.getMemory().read(0x100 | stackPointer));
     }
 
     private void verifyShiftLeftOneBit(int intValue, int intResult, boolean carrySet) {
