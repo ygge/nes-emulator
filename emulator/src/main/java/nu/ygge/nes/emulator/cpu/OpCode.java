@@ -62,6 +62,11 @@ public class OpCode {
             performWithAddress(runtime, toAddress(eb1, eb2) + toInt(runtime.getCpu().getRegisterX()));
         } else if (addressingMode == AddressingMode.AbsoluteY) {
             performWithAbsoluteY(runtime, eb1, eb2);
+        } else if (addressingMode == AddressingMode.AbsoluteIndirect) {
+            int address = toAddress(eb1, eb2);
+            var value1 = runtime.getMemory().read(address);
+            var value2 = runtime.getMemory().read(address + 1);
+            performWithAddress(runtime, toAddress(value2, value1));
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
             byte value1 = runtime.getMemory().read(address);
@@ -93,10 +98,14 @@ public class OpCode {
     }
 
     private void performWithAddress(NESRuntime runtime, int address) {
-        byte value = runtime.getMemory().read(address);
-        var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
-        setStatusFlags(runtime.getCpu(), result);
-        writeValue(runtime, address, result);
+        if (instruction.getAddressInstruction() != null) {
+            instruction.getAddressInstruction().perform(runtime, address);
+        } else {
+            byte value = runtime.getMemory().read(address);
+            var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
+            setStatusFlags(runtime.getCpu(), result);
+            writeValue(runtime, address, result);
+        }
     }
 
     private void writeValue(NESRuntime runtime, int address, byte result) {

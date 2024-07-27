@@ -209,6 +209,10 @@ public final class InstructionFunctions {
         return compare(runtime, runtime.getCpu().getRegisterY(), value);
     }
 
+    public static void jumpToNewLocation(NESRuntime runtime, int address) {
+        runtime.getCpu().setProgramCounter(address);
+    }
+
     private static byte compare(NESRuntime runtime, byte register, byte memory) {
         if (register >= memory) {
             runtime.getCpu().setStatusCarry();

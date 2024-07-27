@@ -2,7 +2,7 @@ package nu.ygge.nes.emulator.memory;
 
 public class Memory {
 
-    private final byte[] ram = new byte[2048];
+    private final byte[] ram = new byte[65536];
 
     public byte read(int address) {
         return ram[address];

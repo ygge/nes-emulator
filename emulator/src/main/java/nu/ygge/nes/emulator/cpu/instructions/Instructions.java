@@ -30,6 +30,7 @@ public enum Instructions {
     EOR("Exclusive-OR Memory with Accumulator", StatusFlagsAffected.STANDARD, InstructionFunctions::exclusiveOrMemoryWithAccumulator, WriteValue.Accumulator),
     INX("Increment Index X by One", InstructionFunctions::incrementRegisterX, StatusFlagsAffected.STANDARD),
     INY("Increment Index Y by One", InstructionFunctions::incrementRegisterY, StatusFlagsAffected.STANDARD),
+    JMP("Jump to New Location", InstructionFunctions::jumpToNewLocation),
     LDA("Load Accumulator with memory", StatusFlagsAffected.STANDARD, InstructionFunctions::loadAccumulator),
     LDX("Load Index X with memory", StatusFlagsAffected.STANDARD, InstructionFunctions::loadRegisterX),
     LDY("Load Index Y with memory", StatusFlagsAffected.STANDARD, InstructionFunctions::loadRegisterY),
@@ -61,25 +62,28 @@ public enum Instructions {
     private final NoArgumentWithReturnInstruction noArgumentWithReturnInstruction;
     private final SingleArgumentInstruction singleArgumentInstruction;
     private final BranchingInstruction branchingInstruction;
+    private final AddressInstruction addressInstruction;
     private final WriteValue writeValue;
 
     Instructions(String description, NoArgumentInstruction noArgumentInstruction) {
         this.description = description;
         this.statusFlagsAffected = StatusFlagsAffected.NONE;
         this.noArgumentInstruction = noArgumentInstruction;
-        this.noArgumentWithReturnInstruction = null;
-        this.singleArgumentInstruction = null;
+        noArgumentWithReturnInstruction = null;
+        singleArgumentInstruction = null;
         branchingInstruction = null;
+        addressInstruction = null;
         writeValue = WriteValue.None;
     }
 
     Instructions(String description, NoArgumentWithReturnInstruction noArgumentWithReturnInstruction, StatusFlagsAffected statusFlagsAffected) {
         this.description = description;
         this.statusFlagsAffected = statusFlagsAffected;
-        this.noArgumentInstruction = null;
+        noArgumentInstruction = null;
         this.noArgumentWithReturnInstruction = noArgumentWithReturnInstruction;
-        this.singleArgumentInstruction = null;
+        singleArgumentInstruction = null;
         branchingInstruction = null;
+        addressInstruction = null;
         writeValue = WriteValue.None;
     }
 
@@ -90,20 +94,33 @@ public enum Instructions {
     Instructions(String description, StatusFlagsAffected statusFlagsAffected, SingleArgumentInstruction singleArgumentInstruction, WriteValue writeValue) {
         this.description = description;
         this.statusFlagsAffected = statusFlagsAffected;
-        this.noArgumentInstruction = null;
-        this.noArgumentWithReturnInstruction = null;
+        noArgumentInstruction = null;
+        noArgumentWithReturnInstruction = null;
         this.singleArgumentInstruction = singleArgumentInstruction;
         branchingInstruction = null;
+        addressInstruction = null;
         this.writeValue = writeValue;
     }
 
     Instructions(String description, BranchingInstruction branchingInstruction) {
         this.description = description;
         this.statusFlagsAffected = StatusFlagsAffected.NONE;
-        this.noArgumentInstruction = null;
-        this.noArgumentWithReturnInstruction = null;
-        this.singleArgumentInstruction = null;
+        noArgumentInstruction = null;
+        noArgumentWithReturnInstruction = null;
+        singleArgumentInstruction = null;
         this.branchingInstruction = branchingInstruction;
+        addressInstruction = null;
+        this.writeValue = WriteValue.None;
+    }
+
+    Instructions(String description, AddressInstruction addressInstruction) {
+        this.description = description;
+        this.statusFlagsAffected = StatusFlagsAffected.NONE;
+        noArgumentInstruction = null;
+        noArgumentWithReturnInstruction = null;
+        singleArgumentInstruction = null;
+        this.branchingInstruction = null;
+        this.addressInstruction = addressInstruction;
         this.writeValue = WriteValue.None;
     }
 }
