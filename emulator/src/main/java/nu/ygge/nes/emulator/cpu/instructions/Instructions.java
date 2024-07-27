@@ -37,6 +37,7 @@ public enum Instructions {
     LDX("Load Index X with memory", StatusFlagsAffected.STANDARD, InstructionFunctions::loadRegisterX),
     LDY("Load Index Y with memory", StatusFlagsAffected.STANDARD, InstructionFunctions::loadRegisterY),
     LSR("Shift Right One Bit", StatusFlagsAffected.STANDARD, InstructionFunctions::shiftRightOneBit, WriteValue.AccumulatorOrMemory),
+    NOP("No Operation", runtime -> {}),
     ORA("OR Memory with Accumulator", StatusFlagsAffected.STANDARD, InstructionFunctions::orMemoryWithAccumulator, WriteValue.Accumulator),
     PHA("Push Accumulator on Stack", InstructionFunctions::pushAccumulatorOnStack),
     PHP("Push Processor Status on Stack", InstructionFunctions::pushProcessorStatusOnStack),

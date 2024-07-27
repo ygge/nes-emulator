@@ -139,6 +139,7 @@ public enum OpCodes {
     SBCZ(0xE5, Instructions.SBC, AddressingMode.ZeroPage, 3),
     SBCI(0xE9, Instructions.SBC, AddressingMode.Immediate, 2),
     INX(0xE8, Instructions.INX, AddressingMode.Implied, 2),
+    NOP(0xEA, Instructions.NOP, AddressingMode.Implied, 2),
     CPXA(0xEC, Instructions.CPX, AddressingMode.Absolute, 4),
     SBCA(0xED, Instructions.SBC, AddressingMode.Absolute, 4),
     BEQ(0xF0, Instructions.BEQ, AddressingMode.Relative, 2),
