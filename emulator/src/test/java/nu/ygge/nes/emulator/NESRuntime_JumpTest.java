@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator;
 
+import nu.ygge.nes.emulator.cpu.InterruptAddress;
 import nu.ygge.nes.emulator.cpu.OpCodes;
 import nu.ygge.nes.emulator.cpu.util.MemoryWriter;
 import org.junit.jupiter.api.Assertions;
@@ -44,5 +45,22 @@ public class NESRuntime_JumpTest {
         runtime.performSingleInstruction();
 
         Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
+    }
+
+    @Test
+    void verifyForceBreakAndReturn() {
+        memoryWriter.write(OpCodes.BRK.getCode());
+
+        runtime.getMemory().write(InterruptAddress.BREAK.getStartAddress(), (byte) 0x34);
+        runtime.getMemory().write(InterruptAddress.BREAK.getStartAddress() + 1, (byte) 0x12);
+        runtime.getMemory().write(0x1234, OpCodes.RTI.getCode());
+
+        runtime.performSingleInstruction();
+        Assertions.assertTrue(runtime.getCpu().isStatusBreak());
+
+        runtime.performSingleInstruction();
+
+        Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
+        Assertions.assertFalse(runtime.getCpu().isStatusBreak());
     }
 }

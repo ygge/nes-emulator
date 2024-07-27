@@ -3,6 +3,7 @@ package nu.ygge.nes.emulator.cpu.instructions;
 import nu.ygge.nes.emulator.NESRuntime;
 import nu.ygge.nes.emulator.cpu.CPU;
 import nu.ygge.nes.emulator.cpu.CPUUtil;
+import nu.ygge.nes.emulator.cpu.InterruptAddress;
 
 public final class InstructionFunctions {
 
@@ -216,9 +217,7 @@ public final class InstructionFunctions {
     }
 
     public static void jumpToNewLocationSavingReturnAddress(NESRuntime runtime, int address) {
-        int prevAddress = runtime.getCpu().getProgramCounter();
-        pushToStack(runtime, (byte) (prevAddress & 0xFF));
-        pushToStack(runtime, (byte) (prevAddress >> 8));
+        saveAddressToStack(runtime, runtime.getCpu().getProgramCounter());
         jumpToNewLocation(runtime, address);
     }
 
@@ -227,6 +226,25 @@ public final class InstructionFunctions {
         var lsb = pullFromStack(runtime);
         int address = CPUUtil.toAddress(msb, lsb);
         jumpToNewLocation(runtime, address);
+    }
+
+    public static void forceBreak(NESRuntime runtime) {
+        saveAddressToStack(runtime, runtime.getCpu().getProgramCounter() + 1);
+        runtime.getCpu().setStatusBreak();
+        pushToStack(runtime, runtime.getCpu().getStatusRegister());
+        runtime.resetProgramCounter(InterruptAddress.BREAK);
+    }
+
+    public static void returnFromInterrupt(NESRuntime runtime) {
+        var statusRegister = pullFromStack(runtime);
+        runtime.getCpu().setStatusRegister(statusRegister);
+        runtime.getCpu().clearStatusBreak();
+        returnFromSubroutine(runtime);
+    }
+
+    private static void saveAddressToStack(NESRuntime runtime, int address) {
+        pushToStack(runtime, (byte) (address & 0xFF));
+        pushToStack(runtime, (byte) (address >> 8));
     }
 
     private static byte compare(NESRuntime runtime, byte register, byte memory) {

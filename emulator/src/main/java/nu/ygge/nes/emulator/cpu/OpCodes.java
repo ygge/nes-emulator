@@ -5,6 +5,7 @@ import nu.ygge.nes.emulator.cpu.instructions.Instructions;
 
 @Getter
 public enum OpCodes {
+    BRK(0x00, Instructions.BRK, AddressingMode.Implied, 7),
     ORAIX(0x01, Instructions.ORA, AddressingMode.IndirectX, 6),
     ORAZ(0x05, Instructions.ORA, AddressingMode.ZeroPage, 3),
     ASLZ(0x06, Instructions.ASL, AddressingMode.ZeroPage, 5),
@@ -40,6 +41,7 @@ public enum OpCodes {
     ANDAX(0x3D, Instructions.AND, AddressingMode.AbsoluteX, 4),
     ROLAX(0x3E, Instructions.ROL, AddressingMode.AbsoluteX, 7),
     SEC(0x38, Instructions.SEC, AddressingMode.Implied, 2),
+    RTI(0x40, Instructions.RTI, AddressingMode.Implied, 6),
     EORIX(0x41, Instructions.EOR, AddressingMode.IndirectX, 6),
     EORZ(0x45, Instructions.EOR, AddressingMode.ZeroPage, 3),
     LSRZ(0x46, Instructions.LSR, AddressingMode.ZeroPage, 5),
