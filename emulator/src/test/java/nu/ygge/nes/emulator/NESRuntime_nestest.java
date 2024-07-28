@@ -19,7 +19,7 @@ public class NESRuntime_nestest {
         runtime.loadGame(bytes, 0xC000, 0xC000);
         runtime.reset();
         runtime.getCpu().setStatusIgnored(); // this needs to be set for the logging to work, for some reason
-        runtime.getCpu().setStackPointer((byte) 0xFD); // let's try this as well
+        runtime.getCpu().setStackPointer((byte) 0xFD); // stack pointer does not seem to start at 0xFF
         runtime.getCpu().setCycles(7);
 
         String logRow;

@@ -147,7 +147,7 @@ public enum OpCodes {
     NOP(0xEA, Instructions.NOP, AddressingMode.Implied, 2),
     CPXA(0xEC, Instructions.CPX, AddressingMode.Absolute, 4),
     SBCA(0xED, Instructions.SBC, AddressingMode.Absolute, 4),
-    INCA(0xEE, Instructions.INC, AddressingMode.Absolute, 5),
+    INCA(0xEE, Instructions.INC, AddressingMode.Absolute, 6),
     BEQ(0xF0, Instructions.BEQ, AddressingMode.Relative, 2),
     SBCIY(0xF1, Instructions.SBC, AddressingMode.IndirectY, 5),
     SBCZX(0xF5, Instructions.SBC, AddressingMode.ZeroPageX, 4),

@@ -70,12 +70,11 @@ public class OpCode {
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
             byte lsb = runtime.getMemory().read(address);
-            byte msb = runtime.getMemory().read(address + 1);
+            byte msb = runtime.getMemory().read((address + 1) & 0xFF);
             performWithAddress(runtime, CPUUtil.toAddress(msb, lsb));
         } else if (addressingMode == AddressingMode.IndirectY) {
-            int address = toZeroPageAddress(eb1, (byte) 0);
-            byte value1 = runtime.getMemory().read(address);
-            byte value2 = runtime.getMemory().read(address + 1);
+            byte value1 = runtime.getMemory().read(toZeroPageAddress(eb1, (byte) 0));
+            byte value2 = runtime.getMemory().read(toZeroPageAddress(eb1, (byte) 1));
             performWithAbsoluteY(runtime, value2, value1);
         } else if (addressingMode == AddressingMode.Relative) {
             if (instruction.getBranchingInstruction().shouldBranch(runtime.getCpu())) {
