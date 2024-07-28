@@ -11,9 +11,9 @@ The goal of the first version is to be able to play Super Mario Bros and impleme
 This is very much a work in progress.
 
 The priority order for implementation is roughly the following:
-- [ ] Implement instructions set
-- [ ] Parse iNES rom-files (mainly header)
-- [ ] Emulate clock cycles
+- [X] Implement instructions set
+- [X] Parse iNES rom-files (mainly header)
+- [X] Emulate clock cycles
 - [ ] Graphics
 - [ ] Sound
 

@@ -1,10 +1,7 @@
 package nu.ygge.nes.emulator;
 
 import lombok.Getter;
-import nu.ygge.nes.emulator.cpu.CPU;
-import nu.ygge.nes.emulator.cpu.CPUUtil;
-import nu.ygge.nes.emulator.cpu.InterruptAddress;
-import nu.ygge.nes.emulator.cpu.OpCode;
+import nu.ygge.nes.emulator.cpu.*;
 import nu.ygge.nes.emulator.memory.Memory;
 
 import java.util.function.BooleanSupplier;

@@ -42,6 +42,10 @@ public class NESRuntime_nestest {
             var expectedCycles = Integer.parseInt(logRow.substring(90));
             Assertions.assertEquals(expectedCycles, runtime.getCpu().getCycles(), String.format("Wrong number of cycles after %d instructions", instructions));
 
+            if (logRow.charAt(15) == '*') {
+                // first unofficial op code, we can ignore the rest
+                break;
+            }
             try {
                 runtime.performSingleInstruction();
             } catch (RuntimeException e) {
