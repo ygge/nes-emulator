@@ -130,6 +130,24 @@ public class NESRuntime_LDATest {
 
     @Test
     void verifyIndirectYAddressingMode() {
+        runtime.getCpu().setRegisterY((byte) 0xF0);
+        runtime.getCpu().setStatusZero();
+        runtime.getMemory().write(1, (byte) 2);
+        runtime.getMemory().write(2, (byte) 2);
+        runtime.getMemory().write(3, (byte) 1);
+        runtime.getMemory().write(0x1F2, (byte) 0xFE);
+
+        runSingleImmediateOperation(OpCodes.LDAIY);
+
+        Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getAccumulator());
+        Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
+        Assertions.assertEquals(5, runtime.getCpu().getCycles());
+        Assertions.assertTrue(runtime.getCpu().isStatusNegative());
+        Assertions.assertFalse(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyIndirectYAddressingModeWithageBoundaryCrossing() {
         runtime.getCpu().setRegisterY((byte) 0xFF);
         runtime.getCpu().setStatusZero();
         runtime.getMemory().write(1, (byte) 2);
@@ -141,7 +159,7 @@ public class NESRuntime_LDATest {
 
         Assertions.assertEquals((byte) 0xFE, runtime.getCpu().getAccumulator());
         Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
-        Assertions.assertEquals(5, runtime.getCpu().getCycles());
+        Assertions.assertEquals(6, runtime.getCpu().getCycles());
         Assertions.assertTrue(runtime.getCpu().isStatusNegative());
         Assertions.assertFalse(runtime.getCpu().isStatusZero());
     }

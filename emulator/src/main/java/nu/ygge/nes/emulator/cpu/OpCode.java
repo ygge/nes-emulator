@@ -59,7 +59,10 @@ public class OpCode {
         } else if (addressingMode == AddressingMode.ZeroPageX) {
             performWithAddress(runtime, toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
         } else if (addressingMode == AddressingMode.AbsoluteX) {
-            performWithAddress(runtime, CPUUtil.toAddress(eb2, eb1) + CPUUtil.toInt(runtime.getCpu().getRegisterX()));
+            int baseAddress = CPUUtil.toAddress(eb2, eb1);
+            int address = baseAddress + CPUUtil.toInt(runtime.getCpu().getRegisterX());
+            checkForPageBoundaryCrossing(runtime, address, baseAddress);
+            performWithAddress(runtime, address);
         } else if (addressingMode == AddressingMode.AbsoluteY) {
             performWithAbsoluteY(runtime, eb1, eb2);
         } else if (addressingMode == AddressingMode.AbsoluteIndirect) {
@@ -92,8 +95,16 @@ public class OpCode {
     }
 
     private void performWithAbsoluteY(NESRuntime runtime, byte msb, byte lsb) {
-        int address = CPUUtil.toAddress(msb, lsb) + CPUUtil.toInt(runtime.getCpu().getRegisterY());
+        int baseAddress = CPUUtil.toAddress(msb, lsb);
+        int address = baseAddress + CPUUtil.toInt(runtime.getCpu().getRegisterY());
+        checkForPageBoundaryCrossing(runtime, address, baseAddress);
         performWithAddress(runtime, address);
+    }
+
+    private static void checkForPageBoundaryCrossing(NESRuntime runtime, int address, int baseAddress) {
+        if ((address >> 8) != (baseAddress >> 8)) {
+            runtime.getCpu().addCycles(1); // page boundary crossed
+        }
     }
 
     private void performWithAddress(NESRuntime runtime, int address) {

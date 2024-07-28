@@ -42,7 +42,11 @@ public class NESRuntime_nestest {
             var expectedCycles = Integer.parseInt(logRow.substring(90));
             Assertions.assertEquals(expectedCycles, runtime.getCpu().getCycles(), String.format("Wrong number of cycles after %d instructions", instructions));
 
-            runtime.performSingleInstruction();
+            try {
+                runtime.performSingleInstruction();
+            } catch (RuntimeException e) {
+                Assertions.fail(String.format("Failed to perform instruction after %d instructions", instructions), e);
+            }
             ++instructions;
         }
     }
