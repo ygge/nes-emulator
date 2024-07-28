@@ -1,4 +1,5 @@
 rootProject.name = 'nes-emulator'
 
-include 'emulator'
+include 'emulator-core'
+include 'emulator-gui'
 include 'snake'
