@@ -5,6 +5,7 @@ import nu.ygge.nes.emulator.ppu.Tile;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class EmulatorPanel extends JPanel {
@@ -12,8 +13,8 @@ public class EmulatorPanel extends JPanel {
     private static final int SCALE = 4;
     private static final int WIDTH = 256 * SCALE;
     private static final int HEIGHT = 240 * SCALE;
-
-    private static final List<Tile> tiles = new ArrayList<>();
+    private final List<Tile> tiles = new ArrayList<>();
+    private final Color[] palette = new Color[4];
 
     @Override
     public Dimension getPreferredSize() {
@@ -36,6 +37,17 @@ public class EmulatorPanel extends JPanel {
         }
     }
 
+    public void addTile(Tile tile) {
+        tiles.add(tile);
+    }
+
+    public void setPalette(String[] colorPalette) {
+        for (int i = 0; i < palette.length; ++i) {
+            int v = Integer.parseInt(colorPalette[i], 16);
+            palette[i] = new Color((v >> 16), (v >> 8) & 0xFF, v & 0xFF);
+        }
+    }
+
     private void paintTile(Graphics g, int x, int y, Tile tile) {
         for (int yy = 0; yy < 8; ++yy) {
             for (int xx = 0; xx < 8; ++xx) {
@@ -46,16 +58,6 @@ public class EmulatorPanel extends JPanel {
     }
 
     private Color getColor(byte value) {
-        return switch (value) {
-            case 0 -> Color.WHITE;
-            case 1 -> Color.RED;
-            case 2 -> Color.YELLOW;
-            case 3 -> Color.ORANGE.darker();
-            default -> throw new IllegalStateException(String.format("Color value %d is not supported", value));
-        };
-    }
-
-    public void addTile(Tile tile) {
-        tiles.add(tile);
+        return palette[value];
     }
 }

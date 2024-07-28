@@ -1,6 +1,7 @@
 package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.NESRuntime;
+import nu.ygge.nes.emulator.ppu.PPU;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.InputStream;
 
 public class EmulatorGui {
 
+    @SuppressWarnings("resource")
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             throw new IllegalStateException("Program must be started with path to ROM as only parameter");
@@ -32,12 +34,24 @@ public class EmulatorGui {
         runtime.loadGame(data);
         runtime.reset();
 
+        int paletteIndex = 0;
         for (int b = 0; b < 2; ++b) {
             for (int t = 0; t < 256; ++t) {
                 var tile = runtime.getPpu().getTile(b, t);
                 frame.addTile(tile);
             }
         }
-        frame.repaint();
+        while (true) {
+            frame.setPalette(PPU.COLOR_PALETTES[paletteIndex]);
+            frame.repaint();
+            if (++paletteIndex == PPU.COLOR_PALETTES.length) {
+                paletteIndex = 0;
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

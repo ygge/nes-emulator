@@ -23,4 +23,8 @@ public class EmulatorFrame extends JFrame {
     public void addTile(Tile tile) {
         panel.addTile(tile);
     }
+
+    public void setPalette(String[] colorPalette) {
+        panel.setPalette(colorPalette);
+    }
 }
