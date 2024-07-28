@@ -17,11 +17,16 @@ public class OpCode {
     private final Instructions instruction;
     private final AddressingMode addressingMode;
     private final int cycles;
+    private final boolean addCycleOnPageBoundaryCrossing;
 
-    private OpCode(Instructions instruction, AddressingMode addressingMode, int cycles) {
+    private OpCode(Instructions instruction,
+                   AddressingMode addressingMode,
+                   int cycles,
+                   boolean addCycleOnPageBoundaryCrossing) {
         this.instruction = instruction;
         this.addressingMode = addressingMode;
         this.cycles = cycles;
+        this.addCycleOnPageBoundaryCrossing = addCycleOnPageBoundaryCrossing;
     }
 
     public static OpCode getOpCode(byte code) {
@@ -107,8 +112,8 @@ public class OpCode {
         performWithAddress(runtime, address);
     }
 
-    private static void checkForPageBoundaryCrossing(NESRuntime runtime, int address, int baseAddress) {
-        if ((address >> 8) != (baseAddress >> 8)) {
+    private void checkForPageBoundaryCrossing(NESRuntime runtime, int address, int baseAddress) {
+        if (addCycleOnPageBoundaryCrossing && (address >> 8) != (baseAddress >> 8)) {
             runtime.getCpu().addCycles(1); // page boundary crossed
         }
     }
@@ -160,7 +165,16 @@ public class OpCode {
             if (OP_CODES.containsKey(opCode.getCode())) {
                 throw new IllegalStateException("Duplicate op code: " + opCode.getCode());
             }
-            OP_CODES.put(opCode.getCode(), new OpCode(opCode.getInstruction(), opCode.getAddressingMode(), opCode.getCycles()));
+            OP_CODES.put(opCode.getCode(), toOpCode(opCode));
         }
+    }
+
+    private static OpCode toOpCode(OpCodes opCode) {
+        return new OpCode(
+                opCode.getInstruction(),
+                opCode.getAddressingMode(),
+                opCode.getCycles(),
+                opCode.isAddCycleOnPageBoundaryCrossing()
+        );
     }
 }

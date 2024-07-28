@@ -15,12 +15,12 @@ public enum OpCodes {
     ORAA(0x0D, Instructions.ORA, AddressingMode.Absolute, 4),
     ASLA(0x0E, Instructions.ASL, AddressingMode.Absolute, 6),
     BPL(0x10, Instructions.BPL, AddressingMode.Relative, 2),
-    ORAIY(0x11, Instructions.ORA, AddressingMode.IndirectY, 5),
+    ORAIY(0x11, Instructions.ORA, AddressingMode.IndirectY, 5, true),
     ORAZX(0x15, Instructions.ORA, AddressingMode.ZeroPageX, 4),
     ASLZX(0x16, Instructions.ASL, AddressingMode.ZeroPageX, 6),
     CLC(0x18, Instructions.CLC, AddressingMode.Implied, 2),
-    ORAAY(0x19, Instructions.ORA, AddressingMode.AbsoluteY, 4),
-    ORAAX(0x1D, Instructions.ORA, AddressingMode.AbsoluteX, 4),
+    ORAAY(0x19, Instructions.ORA, AddressingMode.AbsoluteY, 4, true),
+    ORAAX(0x1D, Instructions.ORA, AddressingMode.AbsoluteX, 4, true),
     ASLAX(0x1E, Instructions.ASL, AddressingMode.AbsoluteX, 7),
     JSRA(0x20, Instructions.JSR, AddressingMode.Absolute, 6),
     ANDIX(0x21, Instructions.AND, AddressingMode.IndirectX, 6),
@@ -34,11 +34,11 @@ public enum OpCodes {
     ANDA(0x2D, Instructions.AND, AddressingMode.Absolute, 4),
     ROLA(0x2E, Instructions.ROL, AddressingMode.Absolute, 6),
     BMI(0x30, Instructions.BMI, AddressingMode.Relative, 2),
-    ANDIY(0x31, Instructions.AND, AddressingMode.IndirectY, 5),
+    ANDIY(0x31, Instructions.AND, AddressingMode.IndirectY, 5, true),
     ANDZX(0x35, Instructions.AND, AddressingMode.ZeroPageX, 4),
     ROLZX(0x36, Instructions.ROL, AddressingMode.ZeroPageX, 6),
-    ANDAY(0x39, Instructions.AND, AddressingMode.AbsoluteY, 4),
-    ANDAX(0x3D, Instructions.AND, AddressingMode.AbsoluteX, 4),
+    ANDAY(0x39, Instructions.AND, AddressingMode.AbsoluteY, 4, true),
+    ANDAX(0x3D, Instructions.AND, AddressingMode.AbsoluteX, 4, true),
     ROLAX(0x3E, Instructions.ROL, AddressingMode.AbsoluteX, 7),
     SEC(0x38, Instructions.SEC, AddressingMode.Implied, 2),
     RTI(0x40, Instructions.RTI, AddressingMode.Implied, 6),
@@ -52,12 +52,12 @@ public enum OpCodes {
     EORA(0x4D, Instructions.EOR, AddressingMode.Absolute, 4),
     LSRA(0x4E, Instructions.LSR, AddressingMode.Absolute, 6),
     BVC(0x50, Instructions.BVC, AddressingMode.Relative, 2),
-    EORIY(0x51, Instructions.EOR, AddressingMode.IndirectY, 5),
+    EORIY(0x51, Instructions.EOR, AddressingMode.IndirectY, 5, true),
     EORZX(0x55, Instructions.EOR, AddressingMode.ZeroPageX, 4),
     LSRZX(0x56, Instructions.LSR, AddressingMode.ZeroPageX, 6),
     CLI(0x58, Instructions.CLI, AddressingMode.Implied, 2),
-    EORAY(0x59, Instructions.EOR, AddressingMode.AbsoluteY, 4),
-    EORAX(0x5D, Instructions.EOR, AddressingMode.AbsoluteX, 4),
+    EORAY(0x59, Instructions.EOR, AddressingMode.AbsoluteY, 4, true),
+    EORAX(0x5D, Instructions.EOR, AddressingMode.AbsoluteX, 4, true),
     LSRAX(0x5E, Instructions.LSR, AddressingMode.AbsoluteX, 7),
     RTS(0x60, Instructions.RTS, AddressingMode.Implied, 6),
     ADCIX(0x61, Instructions.ADC, AddressingMode.IndirectX, 6),
@@ -70,12 +70,12 @@ public enum OpCodes {
     ADCA(0x6D, Instructions.ADC, AddressingMode.Absolute, 4),
     RORA(0x6E, Instructions.ROR, AddressingMode.Absolute, 6),
     BVS(0x70, Instructions.BVS, AddressingMode.Relative, 2),
-    ADCIY(0x71, Instructions.ADC, AddressingMode.IndirectY, 5),
+    ADCIY(0x71, Instructions.ADC, AddressingMode.IndirectY, 5, true),
     ADCZX(0x75, Instructions.ADC, AddressingMode.ZeroPageX, 4),
     RORZX(0x76, Instructions.ROR, AddressingMode.ZeroPageX, 6),
     SEI(0x78, Instructions.SEI, AddressingMode.Implied, 2),
-    ADCAY(0x79, Instructions.ADC, AddressingMode.AbsoluteY, 4),
-    ADCAX(0x7D, Instructions.ADC, AddressingMode.AbsoluteX, 4),
+    ADCAY(0x79, Instructions.ADC, AddressingMode.AbsoluteY, 4, true),
+    ADCAX(0x7D, Instructions.ADC, AddressingMode.AbsoluteX, 4, true),
     RORAX(0x7E, Instructions.ROR, AddressingMode.AbsoluteX, 7),
     STAZ(0x85, Instructions.STA, AddressingMode.ZeroPage, 3),
     STAIX(0x81, Instructions.STA, AddressingMode.IndirectX, 6),
@@ -90,7 +90,7 @@ public enum OpCodes {
     STAIY(0x91, Instructions.STA, AddressingMode.IndirectY, 6),
     STYZX(0x94, Instructions.STY, AddressingMode.ZeroPageX, 4),
     STAZX(0x95, Instructions.STA, AddressingMode.ZeroPageX, 4),
-    STXZX(0x96, Instructions.STX, AddressingMode.ZeroPageX, 4),
+    STXZY(0x96, Instructions.STX, AddressingMode.ZeroPageY, 4),
     TYA(0x98, Instructions.TYA, AddressingMode.Implied, 2),
     TXS(0x9A, Instructions.TXS, AddressingMode.Implied, 2),
     STAAY(0x99, Instructions.STA, AddressingMode.AbsoluteY, 5),
@@ -108,14 +108,14 @@ public enum OpCodes {
     LDAA(0xAD, Instructions.LDA, AddressingMode.Absolute, 4),
     LDXA(0xAE, Instructions.LDX, AddressingMode.Absolute, 4),
     BCS(0xB0, Instructions.BCS, AddressingMode.Relative, 2),
-    LDAIY(0xB1, Instructions.LDA, AddressingMode.IndirectY, 5),
+    LDAIY(0xB1, Instructions.LDA, AddressingMode.IndirectY, 5, true),
     LDYZX(0xB4, Instructions.LDY, AddressingMode.ZeroPageX, 4),
     LDAZX(0xB5, Instructions.LDA, AddressingMode.ZeroPageX, 4),
     LDXZY(0xB6, Instructions.LDX, AddressingMode.ZeroPageY, 4),
-    LDAAY(0xB9, Instructions.LDA, AddressingMode.AbsoluteY, 4),
-    LDYAX(0xBC, Instructions.LDY, AddressingMode.AbsoluteX, 4),
-    LDAAX(0xBD, Instructions.LDA, AddressingMode.AbsoluteX, 4),
-    LDXAY   (0xBE, Instructions.LDX, AddressingMode.AbsoluteY, 4),
+    LDAAY(0xB9, Instructions.LDA, AddressingMode.AbsoluteY, 4, true),
+    LDYAX(0xBC, Instructions.LDY, AddressingMode.AbsoluteX, 4, true),
+    LDAAX(0xBD, Instructions.LDA, AddressingMode.AbsoluteX, 4, true),
+    LDXAY(0xBE, Instructions.LDX, AddressingMode.AbsoluteY, 4, true),
     CLV(0xB8, Instructions.CLV, AddressingMode.Implied, 2),
     TSX(0xBA, Instructions.TSX, AddressingMode.Implied, 2),
     CPYI(0xC0, Instructions.CPY, AddressingMode.Immediate, 2),
@@ -130,12 +130,12 @@ public enum OpCodes {
     CMPA(0xCD, Instructions.CMP, AddressingMode.Absolute, 4),
     DECA(0xCE, Instructions.DEC, AddressingMode.Absolute, 6),
     BNE(0xD0, Instructions.BNE, AddressingMode.Relative, 2),
-    CMPIY(0xD1, Instructions.CMP, AddressingMode.IndirectY, 5),
+    CMPIY(0xD1, Instructions.CMP, AddressingMode.IndirectY, 5, true),
     CMPZX(0xD5, Instructions.CMP, AddressingMode.ZeroPageX, 4),
     DECZX(0xD6, Instructions.DEC, AddressingMode.ZeroPageX, 6),
     CLD(0xD8, Instructions.CLD, AddressingMode.Implied, 2),
-    CMPAY(0xD9, Instructions.CMP, AddressingMode.AbsoluteY, 4),
-    CMPAX(0xDD, Instructions.CMP, AddressingMode.AbsoluteX, 4),
+    CMPAY(0xD9, Instructions.CMP, AddressingMode.AbsoluteY, 4, true),
+    CMPAX(0xDD, Instructions.CMP, AddressingMode.AbsoluteX, 4, true),
     DECAX(0xDE, Instructions.DEC, AddressingMode.AbsoluteX, 7),
     CPXI(0xE0, Instructions.CPX, AddressingMode.Immediate, 2),
     SBCIX(0xE1, Instructions.SBC, AddressingMode.IndirectX, 6),
@@ -149,23 +149,29 @@ public enum OpCodes {
     SBCA(0xED, Instructions.SBC, AddressingMode.Absolute, 4),
     INCA(0xEE, Instructions.INC, AddressingMode.Absolute, 6),
     BEQ(0xF0, Instructions.BEQ, AddressingMode.Relative, 2),
-    SBCIY(0xF1, Instructions.SBC, AddressingMode.IndirectY, 5),
+    SBCIY(0xF1, Instructions.SBC, AddressingMode.IndirectY, 5, true),
     SBCZX(0xF5, Instructions.SBC, AddressingMode.ZeroPageX, 4),
     INCZX(0xF6, Instructions.INC, AddressingMode.ZeroPageX, 6),
-    SBCAX(0xFD, Instructions.SBC, AddressingMode.AbsoluteX, 4),
     SED(0xF8, Instructions.SED, AddressingMode.Implied, 2),
-    SBCAY(0xF9, Instructions.SBC, AddressingMode.AbsoluteY, 4),
+    SBCAY(0xF9, Instructions.SBC, AddressingMode.AbsoluteY, 4, true),
+    SBCAX(0xFD, Instructions.SBC, AddressingMode.AbsoluteX, 4, true),
     INCAX(0xFE, Instructions.INC, AddressingMode.AbsoluteX, 7);
 
     private final byte code;
     private final Instructions instruction;
     private final AddressingMode addressingMode;
     private final int cycles;
+    private final boolean addCycleOnPageBoundaryCrossing;
 
     OpCodes(int code, Instructions instruction, AddressingMode addressingMode, int cycles) {
+        this(code, instruction, addressingMode, cycles, false);
+    }
+
+    OpCodes(int code, Instructions instruction, AddressingMode addressingMode, int cycles, boolean addCycleOnPageBoundaryCrossing) {
         this.code = (byte)code;
         this.instruction = instruction;
         this.addressingMode = addressingMode;
         this.cycles = cycles;
+        this.addCycleOnPageBoundaryCrossing = addCycleOnPageBoundaryCrossing;
     }
 }
