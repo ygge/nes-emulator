@@ -23,6 +23,15 @@ public class Memory {
     }
 
     private int toAddress(int address) {
-        return address % ram.length;
+        var addressInChip = address % ram.length;
+        if (addressInChip < 0x2000) {
+            // mirroring for CPU RAM
+            addressInChip &= 0x7FF;
+        }
+        else if (addressInChip < 0x4000) {
+            // mirroring for PPU registers
+            addressInChip &= 0x2007;
+        }
+        return addressInChip;
     }
 }
