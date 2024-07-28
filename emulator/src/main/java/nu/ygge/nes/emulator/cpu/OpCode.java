@@ -58,17 +58,23 @@ public class OpCode {
             performWithAddress(runtime, CPUUtil.toAddress((byte) 0, eb1));
         } else if (addressingMode == AddressingMode.ZeroPageX) {
             performWithAddress(runtime, toZeroPageAddress(eb1, runtime.getCpu().getRegisterX()));
+        } else if (addressingMode == AddressingMode.ZeroPageY) {
+            performWithAddress(runtime, toZeroPageAddress(eb1, runtime.getCpu().getRegisterY()));
         } else if (addressingMode == AddressingMode.AbsoluteX) {
             int baseAddress = CPUUtil.toAddress(eb2, eb1);
             int address = baseAddress + CPUUtil.toInt(runtime.getCpu().getRegisterX());
             checkForPageBoundaryCrossing(runtime, address, baseAddress);
             performWithAddress(runtime, address);
         } else if (addressingMode == AddressingMode.AbsoluteY) {
-            performWithAbsoluteY(runtime, eb1, eb2);
+            performWithAbsoluteY(runtime, eb2, eb1);
         } else if (addressingMode == AddressingMode.AbsoluteIndirect) {
             int address = CPUUtil.toAddress(eb2, eb1);
             var lsb = runtime.getMemory().read(address);
-            var msb = runtime.getMemory().read(address + 1);
+            int nextAddress = address + 1;
+            if ((nextAddress >> 8) != (address >> 8)) {
+                nextAddress -= 0x100;
+            }
+            var msb = runtime.getMemory().read(nextAddress);
             performWithAddress(runtime, CPUUtil.toAddress(msb, lsb));
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
