@@ -21,6 +21,6 @@ public final class NesFileLoader {
         chrRom = new byte[8192 * chrRomSize];
 
         System.arraycopy(data, 16, prgRom, 0, prgRom.length);
-        System.arraycopy(data, 16 + prgRomSize, chrRom, 0, chrRom.length);
+        System.arraycopy(data, 16 + prgRom.length, chrRom, 0, chrRom.length);
     }
 }

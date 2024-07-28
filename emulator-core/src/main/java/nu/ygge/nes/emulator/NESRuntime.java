@@ -3,6 +3,7 @@ package nu.ygge.nes.emulator;
 import lombok.Getter;
 import nu.ygge.nes.emulator.cpu.*;
 import nu.ygge.nes.emulator.memory.Memory;
+import nu.ygge.nes.emulator.ppu.PPU;
 
 import java.util.function.BooleanSupplier;
 
@@ -11,10 +12,12 @@ public class NESRuntime {
 
     private final CPU cpu;
     private final Memory memory;
+    private final PPU ppu;
 
     public NESRuntime() {
         this.cpu = new CPU();
         this.memory = new Memory();
+        this.ppu = new PPU();
     }
 
     public void run(BooleanSupplier callback) {
@@ -58,6 +61,7 @@ public class NESRuntime {
         if (programCounterStart != null) {
             setProgramStartCounter(programCounterStart);
         }
+        ppu.setCharacterROM(parsedData.getChrRom());
     }
 
     public void loadGame(short[] gameCode, int gameCodeAddress, int startAddress) {

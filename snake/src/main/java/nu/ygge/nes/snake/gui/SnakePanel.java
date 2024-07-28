@@ -9,7 +9,6 @@ public class SnakePanel extends JPanel {
     private final byte[][] data;
 
     public SnakePanel(byte[][] data) {
-
         this.data = data;
     }
 
