@@ -18,11 +18,11 @@ public class PPU {
 
     public Tile getTile(int bankIndex, int tileIndex) {
         var tile = new Tile();
-        for (int i = 0; i < 64; ++i) {
+        for (int i = 0; i < 128; ++i) {
             int dataIndex = (bankIndex * 0x1000) + (tileIndex * 16) + i / 8;
             int x = i % 8;
-            int y = i / 8;
-            byte value = (byte)((i / 32 + 1) * getBit(dataIndex, 7 - x));
+            int y = (i % 64) / 8;
+            byte value = (byte)((i / 64 + 1) * getBit(dataIndex, 7 - x));
             tile.add(x, y, value);
         }
         return tile;
