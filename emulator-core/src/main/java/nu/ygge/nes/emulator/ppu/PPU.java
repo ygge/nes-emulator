@@ -21,13 +21,19 @@ public class PPU {
             new String[]{ "000000", "000000", "000000", "000000" },
     };
 
+    private AddressRegister addressRegister;
     private byte[] paletteTable, vram, oamData, chrRom;
 
     public void reset(byte[] chrRom) {
+        addressRegister = new AddressRegister();
         paletteTable = new byte[32];
         vram = new byte[2048];
         oamData = new byte[256];
         this.chrRom = chrRom;
+    }
+
+    public void writeToAddressRegister(byte value) {
+        addressRegister.write(value);
     }
 
     public byte[] getCharacterROM() {
