@@ -14,7 +14,7 @@ public class NESRuntime_ASLTest {
         runtime = new NESRuntime();
         byte dummyValue = 0x17;
         for (int i = 0; i < 2048; ++i) {
-            runtime.getMemory().write(i, dummyValue);
+            runtime.getBus().write(i, dummyValue);
         }
     }
 
@@ -39,13 +39,13 @@ public class NESRuntime_ASLTest {
     void verifyAbsoluteAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte)3);
-        runtime.getMemory().write(2, (byte)0);
-        runtime.getMemory().write(3, (byte)0x80);
+        runtime.getBus().write(1, (byte)3);
+        runtime.getBus().write(2, (byte)0);
+        runtime.getBus().write(3, (byte)0x80);
 
         runSingleImmediateOperation(OpCodes.ASLA);
 
-        Assertions.assertEquals((byte)0, runtime.getMemory().read(3));
+        Assertions.assertEquals((byte)0, runtime.getBus().read(3));
         Assertions.assertEquals(3, runtime.getCpu().getProgramCounter());
         Assertions.assertEquals(6, runtime.getCpu().getCycles());
         Assertions.assertFalse(runtime.getCpu().isStatusNegative());
@@ -56,12 +56,12 @@ public class NESRuntime_ASLTest {
     @Test
     void verifyZeroPageAddressingMode() {
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte)2);
-        runtime.getMemory().write(2, (byte)0xC0);
+        runtime.getBus().write(1, (byte)2);
+        runtime.getBus().write(2, (byte)0xC0);
 
         runSingleImmediateOperation(OpCodes.ASLZ);
 
-        Assertions.assertEquals((byte)0x80, runtime.getMemory().read(2));
+        Assertions.assertEquals((byte)0x80, runtime.getBus().read(2));
         Assertions.assertEquals(2, runtime.getCpu().getProgramCounter());
         Assertions.assertEquals(5, runtime.getCpu().getCycles());
         Assertions.assertTrue(runtime.getCpu().isStatusNegative());
@@ -70,7 +70,7 @@ public class NESRuntime_ASLTest {
     }
 
     private void runSingleImmediateOperation(OpCodes opCode) {
-        runtime.getMemory().write(0, opCode.getCode());
+        runtime.getBus().write(0, opCode.getCode());
         runtime.performSingleInstruction();
     }
 }

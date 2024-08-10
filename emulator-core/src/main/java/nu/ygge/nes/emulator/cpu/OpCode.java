@@ -74,21 +74,21 @@ public class OpCode {
             performWithAbsoluteY(runtime, eb2, eb1);
         } else if (addressingMode == AddressingMode.AbsoluteIndirect) {
             int address = CPUUtil.toAddress(eb2, eb1);
-            var lsb = runtime.getMemory().read(address);
+            var lsb = runtime.getBus().read(address);
             int nextAddress = address + 1;
             if ((nextAddress >> 8) != (address >> 8)) {
                 nextAddress -= 0x100;
             }
-            var msb = runtime.getMemory().read(nextAddress);
+            var msb = runtime.getBus().read(nextAddress);
             performWithAddress(runtime, CPUUtil.toAddress(msb, lsb));
         } else if (addressingMode == AddressingMode.IndirectX) {
             int address = toZeroPageAddress(eb1, runtime.getCpu().getRegisterX());
-            byte lsb = runtime.getMemory().read(address);
-            byte msb = runtime.getMemory().read((address + 1) & 0xFF);
+            byte lsb = runtime.getBus().read(address);
+            byte msb = runtime.getBus().read((address + 1) & 0xFF);
             performWithAddress(runtime, CPUUtil.toAddress(msb, lsb));
         } else if (addressingMode == AddressingMode.IndirectY) {
-            byte value1 = runtime.getMemory().read(toZeroPageAddress(eb1, (byte) 0));
-            byte value2 = runtime.getMemory().read(toZeroPageAddress(eb1, (byte) 1));
+            byte value1 = runtime.getBus().read(toZeroPageAddress(eb1, (byte) 0));
+            byte value2 = runtime.getBus().read(toZeroPageAddress(eb1, (byte) 1));
             performWithAbsoluteY(runtime, value2, value1);
         } else if (addressingMode == AddressingMode.Relative) {
             if (instruction.getBranchingInstruction().shouldBranch(runtime.getCpu())) {
@@ -122,7 +122,7 @@ public class OpCode {
         if (instruction.getAddressInstruction() != null) {
             instruction.getAddressInstruction().perform(runtime, address);
         } else {
-            byte value = runtime.getMemory().read(address);
+            byte value = runtime.getBus().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);
             setStatusFlags(runtime.getCpu(), result);
             writeValue(runtime, address, result);
@@ -132,7 +132,7 @@ public class OpCode {
     private void writeValue(NESRuntime runtime, int address, byte result) {
         switch (instruction.getWriteValue()) {
             case Accumulator -> runtime.getCpu().setAccumulator(result);
-            case Memory, AccumulatorOrMemory -> runtime.getMemory().write(address, result);
+            case Memory, AccumulatorOrMemory -> runtime.getBus().write(address, result);
         }
     }
 

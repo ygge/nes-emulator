@@ -1,6 +1,7 @@
 package nu.ygge.nes.snake;
 
 import nu.ygge.nes.emulator.NESRuntime;
+import nu.ygge.nes.emulator.cpu.InterruptAddress;
 import nu.ygge.nes.snake.gui.SnakeFrame;
 
 import java.util.Random;
@@ -30,7 +31,7 @@ public class SnakeGame {
             0xea, 0xca, 0xd0, 0xfb, 0x60
     };
     private final byte[][] data = new byte[32][32];
-    private final NESRuntime runtime;
+    private final SnakeBus bus = new SnakeBus();
     private final Random random;
     private final SnakeFrame snakeFrame;
     private Move lastMove = Move.UP;
@@ -38,8 +39,13 @@ public class SnakeGame {
     public SnakeGame() {
         random = new Random();
         snakeFrame = new SnakeFrame(data, move -> lastMove = move);
-        runtime = new NESRuntime();
-        runtime.loadGame(GAME_CODE, 0x600, 0x600);
+
+        bus.writeData(0x600, GAME_CODE);
+        int startAddress = 0x600;
+        bus.write(InterruptAddress.RESET.getStartAddress(), (byte)(startAddress & 0xFF));
+        bus.write(InterruptAddress.RESET.getStartAddress() + 1, (byte)(startAddress >> 8));
+        var runtime = new NESRuntime();
+        runtime.loadGame(bus);
         runtime.reset();
         runtime.run(this::gameLoop);
     }
@@ -51,7 +57,7 @@ public class SnakeGame {
     private boolean gameLoop() {
         boolean updated = false;
         for (int address = 0x200; address < 0x600; ++address) {
-            var value = runtime.getMemory().read(address);
+            var value = bus.read(address);
             var index = address - 0x200;
             if (data[index / 32][index % 32] != value) {
                 updated = true;
@@ -61,8 +67,8 @@ public class SnakeGame {
         if (updated) {
             snakeFrame.repaint();
         }
-        runtime.getMemory().write(0xFE, (byte) random.nextInt());
-        runtime.getMemory().write(0xFF, lastMove.getCode());
+        bus.write(0xFE, (byte) random.nextInt());
+        bus.write(0xFF, lastMove.getCode());
         try {
             Thread.sleep(0, 70000);
         } catch (InterruptedException e) {

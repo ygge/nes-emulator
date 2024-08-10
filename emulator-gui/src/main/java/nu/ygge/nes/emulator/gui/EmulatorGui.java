@@ -1,6 +1,7 @@
 package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.NESRuntime;
+import nu.ygge.nes.emulator.bus.EmulatorBus;
 import nu.ygge.nes.emulator.ppu.PPU;
 
 import java.io.FileInputStream;
@@ -34,10 +35,12 @@ public class EmulatorGui {
         runtime.loadGame(data);
         runtime.reset();
 
+        var bus = (EmulatorBus)runtime.getBus();
+
         int paletteIndex = 0;
         for (int b = 0; b < 2; ++b) {
             for (int t = 0; t < 256; ++t) {
-                var tile = runtime.getPpu().getTile(b, t);
+                var tile = bus.getPpu().getTile(b, t);
                 frame.addTile(tile);
             }
         }

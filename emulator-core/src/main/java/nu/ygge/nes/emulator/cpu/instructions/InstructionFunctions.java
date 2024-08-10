@@ -282,13 +282,13 @@ public final class InstructionFunctions {
     private static byte pullFromStack(NESRuntime runtime) {
         runtime.getCpu().incrementStackPointer();
         var address = getStackPointerAddress(runtime);
-        return runtime.getMemory().read(address);
+        return runtime.getBus().read(address);
     }
 
     private static void pushToStack(NESRuntime runtime, byte value) {
         var address = getStackPointerAddress(runtime);
         runtime.getCpu().decrementStackPointer();
-        runtime.getMemory().write(address, value);
+        runtime.getBus().write(address, value);
     }
 
     private static int getStackPointerAddress(NESRuntime runtime) {

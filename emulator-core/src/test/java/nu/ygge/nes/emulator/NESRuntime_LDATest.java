@@ -14,7 +14,7 @@ public class NESRuntime_LDATest {
         runtime = new NESRuntime();
         byte dummyValue = 0x17;
         for (int i = 0; i < 2048; ++i) {
-            runtime.getMemory().write(i, dummyValue);
+            runtime.getBus().write(i, dummyValue);
         }
     }
 
@@ -22,7 +22,7 @@ public class NESRuntime_LDATest {
     void verifyImmediateAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte) 0x42);
+        runtime.getBus().write(1, (byte) 0x42);
 
         runSingleImmediateOperation(OpCodes.LDAI);
 
@@ -36,8 +36,8 @@ public class NESRuntime_LDATest {
     @Test
     void verifyAbsoluteAddressingMode() {
         runtime.getCpu().setStatusNegative();
-        runtime.getMemory().write(1, (byte) 2);
-        runtime.getMemory().write(2, (byte) 0);
+        runtime.getBus().write(1, (byte) 2);
+        runtime.getBus().write(2, (byte) 0);
 
         runSingleImmediateOperation(OpCodes.LDAA);
 
@@ -51,8 +51,8 @@ public class NESRuntime_LDATest {
     @Test
     void verifyZeroPageAddressingMode() {
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte) 2);
-        runtime.getMemory().write(2, (byte) 0xFF);
+        runtime.getBus().write(1, (byte) 2);
+        runtime.getBus().write(2, (byte) 0xFF);
 
         runSingleImmediateOperation(OpCodes.LDAZ);
 
@@ -67,8 +67,8 @@ public class NESRuntime_LDATest {
     void verifyZeroPageXAddressingMode() {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setRegisterX((byte) 0xFF);
-        runtime.getMemory().write(1, (byte) 3);
-        runtime.getMemory().write(2, (byte) 0xFF);
+        runtime.getBus().write(1, (byte) 3);
+        runtime.getBus().write(2, (byte) 0xFF);
 
         runSingleImmediateOperation(OpCodes.LDAZX);
 
@@ -83,8 +83,8 @@ public class NESRuntime_LDATest {
     void verifyAbsoluteXAddressingMode() {
         runtime.getCpu().setRegisterX((byte) 1);
         runtime.getCpu().setStatusNegative();
-        runtime.getMemory().write(1, (byte) 0);
-        runtime.getMemory().write(2, (byte) 0);
+        runtime.getBus().write(1, (byte) 0);
+        runtime.getBus().write(2, (byte) 0);
 
         runSingleImmediateOperation(OpCodes.LDAAX);
 
@@ -99,8 +99,8 @@ public class NESRuntime_LDATest {
     void verifyAbsoluteYAddressingMode() {
         runtime.getCpu().setRegisterY((byte) 1);
         runtime.getCpu().setStatusNegative();
-        runtime.getMemory().write(1, (byte) 0);
-        runtime.getMemory().write(2, (byte) 0);
+        runtime.getBus().write(1, (byte) 0);
+        runtime.getBus().write(2, (byte) 0);
 
         runSingleImmediateOperation(OpCodes.LDAAY);
 
@@ -115,9 +115,9 @@ public class NESRuntime_LDATest {
     void verifyIndirectXAddressingMode() {
         runtime.getCpu().setRegisterX((byte) 1);
         runtime.getCpu().setStatusNegative();
-        runtime.getMemory().write(1, (byte) 2);
-        runtime.getMemory().write(3, (byte) 4);
-        runtime.getMemory().write(4, (byte) 0);
+        runtime.getBus().write(1, (byte) 2);
+        runtime.getBus().write(3, (byte) 4);
+        runtime.getBus().write(4, (byte) 0);
 
         runSingleImmediateOperation(OpCodes.LDAIX);
 
@@ -132,10 +132,10 @@ public class NESRuntime_LDATest {
     void verifyIndirectYAddressingMode() {
         runtime.getCpu().setRegisterY((byte) 0xF0);
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte) 2);
-        runtime.getMemory().write(2, (byte) 2);
-        runtime.getMemory().write(3, (byte) 1);
-        runtime.getMemory().write(0x1F2, (byte) 0xFE);
+        runtime.getBus().write(1, (byte) 2);
+        runtime.getBus().write(2, (byte) 2);
+        runtime.getBus().write(3, (byte) 1);
+        runtime.getBus().write(0x1F2, (byte) 0xFE);
 
         runSingleImmediateOperation(OpCodes.LDAIY);
 
@@ -150,10 +150,10 @@ public class NESRuntime_LDATest {
     void verifyIndirectYAddressingModeWithageBoundaryCrossing() {
         runtime.getCpu().setRegisterY((byte) 0xFF);
         runtime.getCpu().setStatusZero();
-        runtime.getMemory().write(1, (byte) 2);
-        runtime.getMemory().write(2, (byte) 2);
-        runtime.getMemory().write(3, (byte) 1);
-        runtime.getMemory().write(0x201, (byte) 0xFE);
+        runtime.getBus().write(1, (byte) 2);
+        runtime.getBus().write(2, (byte) 2);
+        runtime.getBus().write(3, (byte) 1);
+        runtime.getBus().write(0x201, (byte) 0xFE);
 
         runSingleImmediateOperation(OpCodes.LDAIY);
 
@@ -165,7 +165,7 @@ public class NESRuntime_LDATest {
     }
 
     private void runSingleImmediateOperation(OpCodes opCode) {
-        runtime.getMemory().write(0, opCode.getCode());
+        runtime.getBus().write(0, opCode.getCode());
         runtime.performSingleInstruction();
     }
 }

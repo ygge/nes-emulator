@@ -1,7 +1,7 @@
 package nu.ygge.nes.emulator;
 
 import nu.ygge.nes.emulator.cpu.OpCodes;
-import nu.ygge.nes.emulator.cpu.util.MemoryWriter;
+import nu.ygge.nes.emulator.util.MemoryWriter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ public class NESRuntime_AdditionAndSubtractionTest {
         runtime = new NESRuntime();
         int pc = 0x100;
         runtime.getCpu().setProgramCounter(pc);
-        memoryWriter = new MemoryWriter(runtime.getMemory(), pc);
+        memoryWriter = new MemoryWriter(runtime.getBus(), pc);
     }
 
     // $00FE + $0003 (254 + 3 in decimal)
@@ -68,12 +68,12 @@ public class NESRuntime_AdditionAndSubtractionTest {
             runtime.performSingleInstruction();
         }
 
-        Assertions.assertEquals((byte) 0xFE, runtime.getMemory().read(0));
-        Assertions.assertEquals((byte) 0x00, runtime.getMemory().read(1));
-        Assertions.assertEquals((byte) 0x03, runtime.getMemory().read(2));
-        Assertions.assertEquals((byte) 0x00, runtime.getMemory().read(3));
-        Assertions.assertEquals((byte) 0x01, runtime.getMemory().read(4));
-        Assertions.assertEquals((byte) 0x01, runtime.getMemory().read(5));
+        Assertions.assertEquals((byte) 0xFE, runtime.getBus().read(0));
+        Assertions.assertEquals((byte) 0x00, runtime.getBus().read(1));
+        Assertions.assertEquals((byte) 0x03, runtime.getBus().read(2));
+        Assertions.assertEquals((byte) 0x00, runtime.getBus().read(3));
+        Assertions.assertEquals((byte) 0x01, runtime.getBus().read(4));
+        Assertions.assertEquals((byte) 0x01, runtime.getBus().read(5));
         Assertions.assertFalse(runtime.getCpu().isStatusCarry());
     }
 
@@ -126,12 +126,12 @@ public class NESRuntime_AdditionAndSubtractionTest {
             runtime.performSingleInstruction();
         }
 
-        Assertions.assertEquals((byte) 0x80, runtime.getMemory().read(0));
-        Assertions.assertEquals((byte) 0xFF, runtime.getMemory().read(1));
-        Assertions.assertEquals((byte) 0xFB, runtime.getMemory().read(2));
-        Assertions.assertEquals((byte) 0xFF, runtime.getMemory().read(3));
-        Assertions.assertEquals((byte) 0x7B, runtime.getMemory().read(4));
-        Assertions.assertEquals((byte) 0xFF, runtime.getMemory().read(5)); // unsure about this one
+        Assertions.assertEquals((byte) 0x80, runtime.getBus().read(0));
+        Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(1));
+        Assertions.assertEquals((byte) 0xFB, runtime.getBus().read(2));
+        Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(3));
+        Assertions.assertEquals((byte) 0x7B, runtime.getBus().read(4));
+        Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(5)); // unsure about this one
         Assertions.assertTrue(runtime.getCpu().isStatusCarry());
         Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
     }
@@ -185,12 +185,12 @@ public class NESRuntime_AdditionAndSubtractionTest {
             runtime.performSingleInstruction();
         }
 
-        Assertions.assertEquals((byte) 0x80, runtime.getMemory().read(0));
-        Assertions.assertEquals((byte) 0xFF, runtime.getMemory().read(1));
-        Assertions.assertEquals((byte) 0x05, runtime.getMemory().read(2));
-        Assertions.assertEquals((byte) 0x00, runtime.getMemory().read(3));
-        Assertions.assertEquals((byte) 0x7B, runtime.getMemory().read(4));
-        Assertions.assertEquals((byte) 0xFF, runtime.getMemory().read(5));
+        Assertions.assertEquals((byte) 0x80, runtime.getBus().read(0));
+        Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(1));
+        Assertions.assertEquals((byte) 0x05, runtime.getBus().read(2));
+        Assertions.assertEquals((byte) 0x00, runtime.getBus().read(3));
+        Assertions.assertEquals((byte) 0x7B, runtime.getBus().read(4));
+        Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(5));
         Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
     }
 }

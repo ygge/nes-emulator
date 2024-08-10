@@ -537,7 +537,7 @@ class InstructionFunctionsTest {
 
     private void verifyPullAccumulator(int stackPointer, int accumulator) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
-        runtime.getMemory().write(0x100 | (stackPointer + 1), (byte) accumulator);
+        runtime.getBus().write(0x100 | (stackPointer + 1), (byte) accumulator);
         InstructionFunctions.pullAccumulatorFromStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());
@@ -550,7 +550,7 @@ class InstructionFunctionsTest {
         InstructionFunctions.pushAccumulatorOnStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer - 1), runtime.getCpu().getStackPointer());
-        Assertions.assertEquals(accumulator, runtime.getMemory().read(0x100 | stackPointer));
+        Assertions.assertEquals(accumulator, runtime.getBus().read(0x100 | stackPointer));
     }
 
     private void verifyRotateRightOneBit(int intValue, int intResult, boolean carrySet) {
@@ -576,7 +576,7 @@ class InstructionFunctionsTest {
 
     private void verifyPullProcessorStatus(int stackPointer, int statusRegister) {
         runtime.getCpu().setStackPointer((byte) stackPointer);
-        runtime.getMemory().write(0x100 | (stackPointer + 1), (byte) statusRegister);
+        runtime.getBus().write(0x100 | (stackPointer + 1), (byte) statusRegister);
         InstructionFunctions.pullProcessorStatusFromStack(runtime);
 
         Assertions.assertEquals((byte) (stackPointer + 1), runtime.getCpu().getStackPointer());
@@ -651,10 +651,6 @@ class InstructionFunctionsTest {
 
         void setValue(NESRuntime runtime, byte value) {
             setValue.accept(runtime, value);
-        }
-
-        byte perform(NESRuntime runtime, byte value) {
-            return performValue.apply(runtime, value);
         }
     }
 }

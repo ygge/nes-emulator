@@ -138,8 +138,8 @@ public class NESRuntime_BranchingTest {
     }
 
     private void runSingleImmediateOperation(OpCodes opCode, int value) {
-        runtime.getMemory().write(PROGRAM_COUNTER, opCode.getCode());
-        runtime.getMemory().write(PROGRAM_COUNTER + 1, (byte)value);
+        runtime.getBus().write(PROGRAM_COUNTER, opCode.getCode());
+        runtime.getBus().write(PROGRAM_COUNTER + 1, (byte)value);
         runtime.performSingleInstruction();
     }
 }

@@ -69,14 +69,14 @@ public class NESRuntime_ImpliedAddressingModeTest {
         runSingleImpliedOperation(OpCodes.PHP, 3);
 
         Assertions.assertEquals((byte)0xFE, runtime.getCpu().getStackPointer());
-        Assertions.assertEquals((byte)0b110001, runtime.getMemory().read(0x100 + 0xFF));
+        Assertions.assertEquals((byte)0b110001, runtime.getBus().read(0x100 + 0xFF));
     }
 
     @Test
     void verifyStackOverflowOnToManyPushStackPointer() {
         runtime.getCpu().setStackPointer((byte)0xFF);
         for (int i = 0; i < 256; ++i) {
-            runtime.getMemory().write(i, OpCodes.PHP.getCode());
+            runtime.getBus().write(i, OpCodes.PHP.getCode());
         }
 
         for (int i = 0; i < 255; ++i) {
@@ -91,7 +91,7 @@ public class NESRuntime_ImpliedAddressingModeTest {
     }
 
     private void runSingleImpliedOperation(OpCodes opCode, int cycles) {
-        runtime.getMemory().write(0, opCode.getCode());
+        runtime.getBus().write(0, opCode.getCode());
 
         runtime.performSingleInstruction();
 

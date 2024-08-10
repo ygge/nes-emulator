@@ -21,13 +21,12 @@ public class PPU {
             new String[]{ "000000", "000000", "000000", "000000" },
     };
 
-    private byte[] chrRom;
+    private byte[] paletteTable, vram, oamData, chrRom;
 
-    public PPU() {
-        this.chrRom = new byte[0];
-    }
-
-    public void setCharacterROM(byte[] chrRom) {
+    public void reset(byte[] chrRom) {
+        paletteTable = new byte[32];
+        vram = new byte[2048];
+        oamData = new byte[256];
         this.chrRom = chrRom;
     }
 

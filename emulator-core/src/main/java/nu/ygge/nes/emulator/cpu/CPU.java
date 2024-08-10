@@ -2,8 +2,8 @@ package nu.ygge.nes.emulator.cpu;
 
 import lombok.Getter;
 import lombok.Setter;
+import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.exception.NESException;
-import nu.ygge.nes.emulator.memory.Memory;
 
 @Getter
 @Setter
@@ -23,8 +23,8 @@ public class CPU {
         cycles = 0;
     }
 
-    public byte readInstruction(Memory memory) {
-        var value = memory.read(programCounter);
+    public byte readInstruction(Bus bus) {
+        var value = bus.read(programCounter);
         ++programCounter;
         return value;
     }

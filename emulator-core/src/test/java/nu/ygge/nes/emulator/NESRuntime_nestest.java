@@ -1,6 +1,8 @@
 package nu.ygge.nes.emulator;
 
 import nu.ygge.nes.emulator.cpu.CPUUtil;
+import nu.ygge.nes.emulator.cpu.InterruptAddress;
+import nu.ygge.nes.emulator.util.TestBus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,8 +17,15 @@ public class NESRuntime_nestest {
         var bytes = getClass().getResource("/nestest.nes").openStream().readAllBytes();
         var logIn = new BufferedReader(new InputStreamReader(getClass().getResource("/nestest.log").openStream()));
 
+        var parsedData = new NesFileLoader(bytes);
+        int startAddress = 0xC000;
+
         var runtime = new NESRuntime();
-        runtime.loadGame(bytes, 0xC000, 0xC000);
+        var bus = new TestBus();
+        bus.writeData(0xC000, parsedData.getPrgRom());
+        bus.write(InterruptAddress.RESET.getStartAddress(), (byte)(startAddress & 0xFF));
+        bus.write(InterruptAddress.RESET.getStartAddress() + 1, (byte)(startAddress >> 8));
+        runtime.loadGame(bus);
         runtime.reset();
         runtime.getCpu().setStatusIgnored(); // this needs to be set for the logging to work, for some reason
         runtime.getCpu().setStackPointer((byte) 0xFD); // stack pointer does not seem to start at 0xFF

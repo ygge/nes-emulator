@@ -14,7 +14,7 @@ public class NESRuntime_ORATest {
         runtime = new NESRuntime();
         byte dummyValue = 0x17;
         for (int i = 0; i < 2048; ++i) {
-            runtime.getMemory().write(i, dummyValue);
+            runtime.getBus().write(i, dummyValue);
         }
     }
 
@@ -23,7 +23,7 @@ public class NESRuntime_ORATest {
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setStatusZero();
         runtime.getCpu().setAccumulator((byte) 7);
-        runtime.getMemory().write(1, (byte) 0x42);
+        runtime.getBus().write(1, (byte) 0x42);
 
         runSingleImmediateOperation(OpCodes.ORAI);
 
@@ -38,8 +38,8 @@ public class NESRuntime_ORATest {
     void verifyAbsoluteAddressingMode() {
         runtime.getCpu().setStatusZero();
         runtime.getCpu().setAccumulator((byte) 0xFE);
-        runtime.getMemory().write(1, (byte) 0);
-        runtime.getMemory().write(2, (byte) 2);
+        runtime.getBus().write(1, (byte) 0);
+        runtime.getBus().write(2, (byte) 2);
 
         runSingleImmediateOperation(OpCodes.ORAA);
 
@@ -55,8 +55,8 @@ public class NESRuntime_ORATest {
         runtime.getCpu().setStatusZero();
         runtime.getCpu().setStatusNegative();
         runtime.getCpu().setAccumulator((byte) 2);
-        runtime.getMemory().write(1, (byte) 2);
-        runtime.getMemory().write(2, (byte) 1);
+        runtime.getBus().write(1, (byte) 2);
+        runtime.getBus().write(2, (byte) 1);
 
         runSingleImmediateOperation(OpCodes.ORAZ);
 
@@ -68,7 +68,7 @@ public class NESRuntime_ORATest {
     }
 
     private void runSingleImmediateOperation(OpCodes opCode) {
-        runtime.getMemory().write(0, opCode.getCode());
+        runtime.getBus().write(0, opCode.getCode());
         runtime.performSingleInstruction();
     }
 }
