@@ -1,12 +1,14 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.cpu.CPUUtil;
+
 public class AddressRegister {
 
     private final byte[] value = new byte[2];
     private int currentIndex = 0;
 
     public int get() {
-        return value[0] << 8 | value[1];
+        return CPUUtil.toInt(value[0]) << 8 | CPUUtil.toInt(value[1]);
     }
 
     public void write(byte value) {

@@ -21,6 +21,7 @@ public class EmulatorBus implements Bus {
 
     @Override
     public byte read(int address) {
+        // TODO: handle writing to memory that should not be read, today memory is always read first
         if (address < 0x2000) {
             // mirroring for CPU RAM
             return cpuRam.read(address & 0x7FF);
@@ -38,11 +39,16 @@ public class EmulatorBus implements Bus {
             // mirroring for PPU registers
             var mirroredAddress = address & 0b00100000_00000111;
             return read(mirroredAddress);
+        } else if (address <= 0x4015) {
+            // TODO: handle APU
+            return 0;
+        } else if (address == 0x4016 || address == 0x4017) {
+            // TODO: handle input
+            return 0;
         } else if (address >= 0x8000) {
             return prgRom[address - 0x8000];
         }
-        //throw new NESException(String.format("Illegal read address access for %d", address));
-        return 0;
+        throw new NESException(String.format("Illegal read address access for %d", address));
     }
 
     @Override
@@ -72,6 +78,13 @@ public class EmulatorBus implements Bus {
             // mirroring for PPU registers
             address &= 0x2007;
             write(address, data);
+        } else if (address <= 0x4013 || address == 0x4015) {
+            // TODO: handle APU
+        } else if (address == 0x4014) {
+            // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference#OAM_DMA_.28.244014.29_.3E_write
+            // TODO: implement this
+        } else if (address == 0x4016 || address == 0x4017) {
+            // TODO: handle input
         } else {
             throw new NESException(String.format("Illegal write address access for %d", address));
         }

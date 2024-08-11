@@ -48,7 +48,7 @@ public class NESRuntime {
         operation.perform(this, eb1, eb2);
         cpu.addCycles(operation.getCycles());
         var newCycles = cpu.getCycles() - cycles;
-        cycles = newCycles;
+        cycles += newCycles;
         var result = bus.ppuTick(newCycles * 3);
         if (result == PPUTickResult.NMI) {
             performNMIInterrupt();
