@@ -25,9 +25,12 @@ public class PPU {
 
     private AddressRegister addressRegister;
     private ControlRegister controlRegister;
+    private MaskRegister maskRegister;
+    private StatusRegister statusRegister;
     private byte[] paletteTable, vram, oamData, chrRom;
     private Mirroring mirroring;
     private byte dataBuffer;
+    private short oamAddress;
 
     public void reset(byte[] chrRom, Mirroring mirroring) {
         addressRegister = new AddressRegister();
@@ -47,8 +50,30 @@ public class PPU {
         controlRegister.update(value);
     }
 
+    public void writeToMaskRegister(byte value) {
+        maskRegister.update(value);
+    }
+
+    public byte readStatus() {
+        var data = statusRegister.getSnapshot();
+        statusRegister.resetVBlankStatus();
+        addressRegister.resetLatch();
+        return data;
+    }
+
+    public void writeToOamAddress(byte value) {
+        oamAddress = value;
+    }
+
+    public void writeToOamData(byte value) {
+        oamData[oamAddress] = value;
+        if (++oamAddress == 256) {
+            oamAddress = 0;
+        }
+    }
+
     public void incrementVramAddress() {
-        addressRegister.add(controlRegister.getVramAddrIncrement());
+        addressRegister.add(controlRegister.getVramAddressIncrement());
     }
 
     public byte read() {
@@ -92,6 +117,10 @@ public class PPU {
             throw new NESException(String.format("Address %d is not expected to be written", address));
         }
         incrementVramAddress();
+    }
+
+    public byte readOamData() {
+        return oamData[oamAddress];
     }
 
     public byte[] getCharacterROM() {

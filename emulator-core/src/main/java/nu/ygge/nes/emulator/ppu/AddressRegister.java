@@ -24,6 +24,10 @@ public class AddressRegister {
         wrapValue();
     }
 
+    public void resetLatch() {
+        currentIndex = 0;
+    }
+
     private void set(int value) {
         this.value[0] = (byte)(value&0xFF00);
         this.value[1] = (byte)(value&0xFF);

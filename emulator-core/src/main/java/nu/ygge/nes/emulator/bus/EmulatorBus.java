@@ -26,6 +26,10 @@ public class EmulatorBus implements Bus {
         } else if (address == 0x2000 || address == 0x2001 || address == 0x2003
                 || address == 0x2005 || address == 0x2006 || address == 0x4014) {
             throw new NESException(String.format("Cannot read from write only registers %d", address));
+        } else if (address == 0x2002) {
+            return ppu.readStatus();
+        } else if (address == 0x2004) {
+            return ppu.readOamData();
         } else if (address == 0x2007) {
             return ppu.read();
         } else if (address >= 0x2008 && address <  0x4000) {
@@ -45,6 +49,14 @@ public class EmulatorBus implements Bus {
             cpuRam.write(address & 0x7FF, data);
         } else if (address == 0x2000) {
             ppu.writeToControlRegister(data);
+        } else if (address == 0x2001) {
+            ppu.writeToMaskRegister(data);
+        } else if (address == 0x2002) {
+            throw new NESException("Cannot write to status registers 2002");
+        } else if (address == 0x2003) {
+            ppu.writeToOamAddress(data);
+        } else if (address == 0x2004) {
+            ppu.writeToOamData(data);
         } else if (address == 0x2006) {
             ppu.writeToAddressRegister(data);
         } else if (address == 0x2007) {
