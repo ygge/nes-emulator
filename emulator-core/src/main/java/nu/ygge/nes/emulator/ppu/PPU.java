@@ -1,5 +1,7 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.exception.NESException;
+
 public class PPU {
 
     public static final String[][] COLOR_PALETTES = {
@@ -22,18 +24,74 @@ public class PPU {
     };
 
     private AddressRegister addressRegister;
+    private ControlRegister controlRegister;
     private byte[] paletteTable, vram, oamData, chrRom;
+    private Mirroring mirroring;
+    private byte dataBuffer;
 
-    public void reset(byte[] chrRom) {
+    public void reset(byte[] chrRom, Mirroring mirroring) {
         addressRegister = new AddressRegister();
+        controlRegister = new ControlRegister();
         paletteTable = new byte[32];
         vram = new byte[2048];
         oamData = new byte[256];
         this.chrRom = chrRom;
+        this.mirroring = mirroring;
     }
 
     public void writeToAddressRegister(byte value) {
         addressRegister.write(value);
+    }
+
+    public void writeToControlRegister(byte value) {
+        controlRegister.update(value);
+    }
+
+    public void incrementVramAddress() {
+        addressRegister.add(controlRegister.getVramAddrIncrement());
+    }
+
+    public byte read() {
+        var address = addressRegister.get();
+        incrementVramAddress();
+        if (address <= 0x1fff) {
+            // read from CHR ROM, with delay
+            var data = dataBuffer;
+            dataBuffer = chrRom[address];
+            return data;
+        } else if (address <= 0x2fff) {
+            // read from RAM, with delay
+            var data = dataBuffer;
+            dataBuffer = vram[mirrorVramAddress(address)];
+            return data;
+        } else if (address <= 0x3eff) {
+            throw new NESException(String.format("Address %d not expected to be read", address));
+        } else if (address <= 0x3fff) {
+            return paletteTable[address - 0x3eff];
+        } else {
+            throw new NESException(String.format("Address %d not expected to be read", address));
+        }
+    }
+
+    public void write(byte data) {
+        var address = addressRegister.get();
+        if (address < 0x2000) {
+            throw new NESException(String.format("Address %d is in CHR ROM, not expected to be written", address));
+        } else if (address < 0x3000) {
+            vram[mirrorVramAddress(address)] = data;
+        } else if (address < 0x3f00) {
+            throw new NESException(String.format("Address %d shoule not be written to", address));
+        } else if (address == 0x3f10 || address == 0x3f14 || address == 0x3f18 || address == 0x3f1c) {
+            // these four addresses are mirrors of the same address minus 0x10
+            var mirroredAddress = address - 0x3f10;
+            paletteTable[mirroredAddress] = data;
+        } else if (address <= 0x4000) {
+            var mirroredAddress = address - 0x3f00;
+            paletteTable[mirroredAddress] = data;
+        } else {
+            throw new NESException(String.format("Address %d is not expected to be written", address));
+        }
+        incrementVramAddress();
     }
 
     public byte[] getCharacterROM() {
@@ -50,6 +108,24 @@ public class PPU {
             tile.add(x, y, value);
         }
         return tile;
+    }
+
+    private int mirrorVramAddress(int address) {
+        var mirroredAddress = address & 0b10111111111111;
+        var vramIndex = mirroredAddress - 0x2000;
+        var nameTable = vramIndex / 0x400;
+        if (mirroring == Mirroring.VERTICAL) {
+            if (nameTable == 2 || nameTable == 3) {
+                return vramIndex - 0x800;
+            }
+        } else {
+            if (vramIndex == 1 || vramIndex == 2) {
+                return vramIndex - 0x400;
+            } else if (vramIndex == 3) {
+                return vramIndex - 0x800;
+            }
+        }
+        return vramIndex;
     }
 
     private int getBit(int dataIndex, int index) {

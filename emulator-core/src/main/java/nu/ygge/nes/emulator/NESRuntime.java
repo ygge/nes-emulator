@@ -55,7 +55,7 @@ public class NESRuntime {
     public void loadGame(byte[] fileData) {
         var parsedData = new NesFileLoader(fileData);
         var emulatorBus = new EmulatorBus(parsedData.getPrgRom());
-        emulatorBus.getPpu().reset(parsedData.getChrRom());
+        emulatorBus.getPpu().reset(parsedData.getChrRom(), parsedData.getMirroring());
         loadGame(emulatorBus);
     }
 
