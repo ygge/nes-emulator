@@ -3,10 +3,8 @@ package nu.ygge.nes.emulator;
 import lombok.Getter;
 import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.bus.EmulatorBus;
-import nu.ygge.nes.emulator.cpu.CPU;
-import nu.ygge.nes.emulator.cpu.CPUUtil;
-import nu.ygge.nes.emulator.cpu.InterruptAddress;
-import nu.ygge.nes.emulator.cpu.OpCode;
+import nu.ygge.nes.emulator.bus.PPUTickResult;
+import nu.ygge.nes.emulator.cpu.*;
 
 import java.util.function.BooleanSupplier;
 
@@ -15,6 +13,7 @@ public class NESRuntime {
 
     private final CPU cpu;
     private Bus bus;
+    private int cycles;
 
     public NESRuntime() {
         this.cpu = new CPU();
@@ -38,12 +37,19 @@ public class NESRuntime {
         var eb2 = extraBytes > 1 ? cpu.readInstruction(bus) : 0;
         operation.perform(this, eb1, eb2);
         cpu.addCycles(operation.getCycles());
+        var newCycles = cpu.getCycles() - cycles;
+        cycles = newCycles;
+        var result = bus.ppuTick(newCycles * 3);
+        if (result == PPUTickResult.NMI) {
+            performNMIInterrupt();
+        }
     }
 
     public void reset() {
         cpu.reset();
         cpu.setStatusInterrupt();
         resetProgramCounter(InterruptAddress.RESET);
+        cycles = 0;
     }
 
     public void resetProgramCounter(InterruptAddress interruptAddress) {
@@ -61,5 +67,17 @@ public class NESRuntime {
 
     public void loadGame(Bus bus) {
         this.bus = bus;
+    }
+
+    private void performNMIInterrupt() {
+        StackHelper.saveAddressToStack(this, cpu.getProgramCounter());
+        var prevStatus = cpu.getStatusRegister();
+        cpu.clearStatusBreak();
+        cpu.setStatusIgnored();
+        StackHelper.pushToStack(this, cpu.getStatusRegister());
+        cpu.setStatusRegister(prevStatus);
+        cpu.setStatusInterrupt();
+        bus.ppuTick(2 * 3); // this takes two more cycles
+        resetProgramCounter(InterruptAddress.NMI);
     }
 }

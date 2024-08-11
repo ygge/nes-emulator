@@ -3,6 +3,7 @@ package nu.ygge.nes.emulator.cpu.instructions;
 import nu.ygge.nes.emulator.NESRuntime;
 import nu.ygge.nes.emulator.cpu.CPUUtil;
 import nu.ygge.nes.emulator.cpu.InterruptAddress;
+import nu.ygge.nes.emulator.cpu.StackHelper;
 
 public final class InstructionFunctions {
 
@@ -33,7 +34,7 @@ public final class InstructionFunctions {
         var prevStatus = runtime.getCpu().getStatusRegister();
         runtime.getCpu().setStatusIgnored();
         runtime.getCpu().setStatusBreak();
-        pushToStack(runtime, runtime.getCpu().getStatusRegister());
+        StackHelper.pushToStack(runtime, runtime.getCpu().getStatusRegister());
         runtime.getCpu().setStatusRegister(prevStatus);
     }
 
@@ -71,7 +72,7 @@ public final class InstructionFunctions {
     }
 
     public static void pullProcessorStatusFromStack(NESRuntime runtime) {
-        runtime.getCpu().setStatusRegister(pullFromStack(runtime));
+        runtime.getCpu().setStatusRegister(StackHelper.pullFromStack(runtime));
         runtime.getCpu().clearStatusBreak();
         runtime.getCpu().setStatusIgnored();
     }
@@ -107,11 +108,11 @@ public final class InstructionFunctions {
     }
 
     public static void pushAccumulatorOnStack(NESRuntime runtime) {
-        pushToStack(runtime, runtime.getCpu().getAccumulator());
+        StackHelper.pushToStack(runtime, runtime.getCpu().getAccumulator());
     }
 
     public static byte pullAccumulatorFromStack(NESRuntime runtime) {
-        runtime.getCpu().setAccumulator(pullFromStack(runtime));
+        runtime.getCpu().setAccumulator(StackHelper.pullFromStack(runtime));
         return runtime.getCpu().getAccumulator();
     }
 
@@ -227,7 +228,7 @@ public final class InstructionFunctions {
     }
 
     public static void jumpToNewLocationSavingReturnAddress(NESRuntime runtime, int address) {
-        saveAddressToStack(runtime, runtime.getCpu().getProgramCounter() - 1);
+        StackHelper.saveAddressToStack(runtime, runtime.getCpu().getProgramCounter() - 1);
         jumpToNewLocation(runtime, address);
     }
 
@@ -236,14 +237,14 @@ public final class InstructionFunctions {
     }
 
     public static void forceBreak(NESRuntime runtime) {
-        saveAddressToStack(runtime, runtime.getCpu().getProgramCounter() + 1);
+        StackHelper.saveAddressToStack(runtime, runtime.getCpu().getProgramCounter() + 1);
         runtime.getCpu().setStatusBreak();
-        pushToStack(runtime, runtime.getCpu().getStatusRegister());
+        StackHelper.pushToStack(runtime, runtime.getCpu().getStatusRegister());
         runtime.resetProgramCounter(InterruptAddress.BREAK);
     }
 
     public static void returnFromInterrupt(NESRuntime runtime) {
-        var statusRegister = pullFromStack(runtime);
+        var statusRegister = StackHelper.pullFromStack(runtime);
         runtime.getCpu().setStatusRegister(statusRegister);
         runtime.getCpu().clearStatusBreak();
         runtime.getCpu().setStatusIgnored();
@@ -259,15 +260,10 @@ public final class InstructionFunctions {
     }
 
     private static void returnFromCall(NESRuntime runtime, int deltaAddress) {
-        var lsb = pullFromStack(runtime);
-        var msb = pullFromStack(runtime);
+        var lsb = StackHelper.pullFromStack(runtime);
+        var msb = StackHelper.pullFromStack(runtime);
         int address = CPUUtil.toAddress(msb, lsb);
         jumpToNewLocation(runtime, address + deltaAddress);
-    }
-
-    private static void saveAddressToStack(NESRuntime runtime, int address) {
-        pushToStack(runtime, (byte) (address >> 8));
-        pushToStack(runtime, (byte) (address & 0xFF));
     }
 
     private static byte compare(NESRuntime runtime, byte register, byte memory) {
@@ -277,22 +273,5 @@ public final class InstructionFunctions {
             runtime.getCpu().clearStatusCarry();
         }
         return (byte) (register - memory);
-    }
-
-    private static byte pullFromStack(NESRuntime runtime) {
-        runtime.getCpu().incrementStackPointer();
-        var address = getStackPointerAddress(runtime);
-        return runtime.getBus().read(address);
-    }
-
-    private static void pushToStack(NESRuntime runtime, byte value) {
-        var address = getStackPointerAddress(runtime);
-        runtime.getCpu().decrementStackPointer();
-        runtime.getBus().write(address, value);
-    }
-
-    private static int getStackPointerAddress(NESRuntime runtime) {
-        int address = CPUUtil.toInt(runtime.getCpu().getStackPointer());
-        return 0x100 | address;
     }
 }

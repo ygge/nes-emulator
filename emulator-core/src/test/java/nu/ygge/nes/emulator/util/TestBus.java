@@ -1,6 +1,7 @@
 package nu.ygge.nes.emulator.util;
 
 import nu.ygge.nes.emulator.bus.Bus;
+import nu.ygge.nes.emulator.bus.PPUTickResult;
 
 public class TestBus implements Bus {
 
@@ -14,6 +15,11 @@ public class TestBus implements Bus {
     @Override
     public void write(int address, byte data) {
         ram[toAddress(address)] = data;
+    }
+
+    @Override
+    public PPUTickResult ppuTick(int cycles) {
+        return PPUTickResult.NORMAL;
     }
 
     public void writeData(int gameCodeAddress, byte[] gameCode) {

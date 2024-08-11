@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.bus.PPUTickResult;
 import nu.ygge.nes.emulator.exception.NESException;
 
 public class PPU {
@@ -30,7 +31,9 @@ public class PPU {
     private byte[] paletteTable, vram, oamData, chrRom;
     private Mirroring mirroring;
     private byte dataBuffer;
-    private short oamAddress;
+    private short oamAddress, scanline;
+    private int cycles;
+    private boolean nmiInterrupt;
 
     public void reset(byte[] chrRom, Mirroring mirroring) {
         addressRegister = new AddressRegister();
@@ -47,7 +50,11 @@ public class PPU {
     }
 
     public void writeToControlRegister(byte value) {
+        var before = controlRegister.canGenerateNMI();
         controlRegister.update(value);
+        if (!before && controlRegister.canGenerateNMI() && statusRegister.isInVBlankStatus()) {
+            nmiInterrupt = true;
+        }
     }
 
     public void writeToMaskRegister(byte value) {
@@ -121,6 +128,32 @@ public class PPU {
 
     public byte readOamData() {
         return oamData[oamAddress];
+    }
+
+    public PPUTickResult tick(int cyclesToAdd) {
+        cycles += cyclesToAdd;
+        if (cycles >= 341) {
+            cycles -= 341;
+            ++scanline;
+            if (scanline == 241) {
+                statusRegister.setVBlankStatus(true);
+                statusRegister.setSpriteZeroHit(false);
+                if (controlRegister.canGenerateNMI()) {
+                    return PPUTickResult.NMI;
+                }
+            }
+            if (scanline >= 262) {
+                scanline = 0;
+                statusRegister.setSpriteZeroHit(false);
+                statusRegister.resetVBlankStatus();
+                return PPUTickResult.SCREEN_DONE;
+            }
+        }
+        if (nmiInterrupt) {
+            nmiInterrupt = false;
+            return PPUTickResult.NMI;
+        }
+        return PPUTickResult.NORMAL;
     }
 
     public byte[] getCharacterROM() {

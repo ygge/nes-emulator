@@ -68,8 +68,14 @@ public class EmulatorBus implements Bus {
         } else if (address < 0x4000) {
             // mirroring for PPU registers
             address &= 0x2007;
+            write(address, data);
         } else {
             throw new NESException(String.format("Illegal write address access for %d", address));
         }
+    }
+
+    @Override
+    public PPUTickResult ppuTick(int cycles) {
+        return ppu.tick(cycles);
     }
 }
