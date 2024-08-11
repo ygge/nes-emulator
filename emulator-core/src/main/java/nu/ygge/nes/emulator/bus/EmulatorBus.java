@@ -3,6 +3,7 @@ package nu.ygge.nes.emulator.bus;
 import lombok.Getter;
 import nu.ygge.nes.emulator.cpu.CPURAM;
 import nu.ygge.nes.emulator.exception.NESException;
+import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.PPU;
 
 @Getter
@@ -25,7 +26,8 @@ public class EmulatorBus implements Bus {
             return cpuRam.read(address & 0x7FF);
         } else if (address == 0x2000 || address == 0x2001 || address == 0x2003
                 || address == 0x2005 || address == 0x2006 || address == 0x4014) {
-            throw new NESException(String.format("Cannot read from write only registers %d", address));
+            //throw new NESException(String.format("Cannot read from write only registers %d", address));
+            return 0;
         } else if (address == 0x2002) {
             return ppu.readStatus();
         } else if (address == 0x2004) {
@@ -39,7 +41,8 @@ public class EmulatorBus implements Bus {
         } else if (address >= 0x8000) {
             return prgRom[address - 0x8000];
         }
-        throw new NESException(String.format("Illegal read address access for %d", address));
+        //throw new NESException(String.format("Illegal read address access for %d", address));
+        return 0;
     }
 
     @Override
@@ -77,5 +80,10 @@ public class EmulatorBus implements Bus {
     @Override
     public PPUTickResult ppuTick(int cycles) {
         return ppu.tick(cycles);
+    }
+
+    @Override
+    public Frame getFrame() {
+        return ppu.getFrame();
     }
 }

@@ -1,50 +1,42 @@
 package nu.ygge.nes.emulator.gui;
 
+import nu.ygge.nes.emulator.ppu.Frame;
+import nu.ygge.nes.emulator.ppu.PPU;
 import nu.ygge.nes.emulator.ppu.Tile;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class EmulatorPanel extends JPanel {
 
     private static final int SCALE = 4;
     private static final int WIDTH = 256 * SCALE;
     private static final int HEIGHT = 240 * SCALE;
-    private final List<Tile> tiles = new ArrayList<>();
     private final Color[] palette = new Color[4];
+    private Frame currentFrame;
+
+    public EmulatorPanel() {
+        for (int i = 0; i < palette.length; ++i) {
+            int v = Integer.parseInt(PPU.COLOR_PALETTES[0][i], 16);
+            palette[i] = new Color((v >> 16), (v >> 8) & 0xFF, v & 0xFF);
+        }
+    }
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(WIDTH, Math.max(HEIGHT, tiles.size() * 8 / 32 * SCALE));
+        return new Dimension(WIDTH, HEIGHT);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        int x = 0;
-        int y = 0;
-        for (Tile tile : tiles) {
-            paintTile(g, x, y, tile);
-            x += 9 * SCALE;
-            if (x + 9 * SCALE >= WIDTH) {
-                x = 0;
-                y += 9 * SCALE;
+        if (currentFrame != null) {
+            for (int y = 0; y < currentFrame.getBackground().length; ++y) {
+                for (int x = 0; x < currentFrame.getBackground()[y].length; ++x) {
+                    paintTile(g, x * 8, y * 8, currentFrame.getBackground()[y][x]);
+                }
             }
-        }
-    }
-
-    public void addTile(Tile tile) {
-        tiles.add(tile);
-    }
-
-    public void setPalette(String[] colorPalette) {
-        for (int i = 0; i < palette.length; ++i) {
-            int v = Integer.parseInt(colorPalette[i], 16);
-            palette[i] = new Color((v >> 16), (v >> 8) & 0xFF, v & 0xFF);
         }
     }
 
@@ -59,5 +51,9 @@ public class EmulatorPanel extends JPanel {
 
     private Color getColor(byte value) {
         return palette[value];
+    }
+
+    public void setPpuFrame(Frame ppuFrame) {
+        currentFrame = ppuFrame;
     }
 }

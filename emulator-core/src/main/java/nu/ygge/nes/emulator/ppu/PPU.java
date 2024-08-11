@@ -38,6 +38,8 @@ public class PPU {
     public void reset(byte[] chrRom, Mirroring mirroring) {
         addressRegister = new AddressRegister();
         controlRegister = new ControlRegister();
+        maskRegister = new MaskRegister();
+        statusRegister = new StatusRegister();
         paletteTable = new byte[32];
         vram = new byte[2048];
         oamData = new byte[256];
@@ -156,8 +158,16 @@ public class PPU {
         return PPUTickResult.NORMAL;
     }
 
-    public byte[] getCharacterROM() {
-        return chrRom;
+    public Frame getFrame() {
+        int bank = controlRegister.getBackgroundPatternAddress();
+        var background = new Tile[30][32];
+        for (int y = 0; y < background.length; y++) {
+            for (int x = 0; x < background[y].length; x++) {
+                var tile = vram[y * background[y].length + x];
+                background[y][x] = getTile(bank, tile);
+            }
+        }
+        return new Frame(background, null);
     }
 
     public Tile getTile(int bankIndex, int tileIndex) {

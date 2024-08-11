@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator.gui;
 
+import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.Tile;
 
 import javax.swing.*;
@@ -20,11 +21,7 @@ public class EmulatorFrame extends JFrame {
         setVisible(true);
     }
 
-    public void addTile(Tile tile) {
-        panel.addTile(tile);
-    }
-
-    public void setPalette(String[] colorPalette) {
-        panel.setPalette(colorPalette);
+    public void setFrame(Frame ppuFrame) {
+        panel.setPpuFrame(ppuFrame);
     }
 }

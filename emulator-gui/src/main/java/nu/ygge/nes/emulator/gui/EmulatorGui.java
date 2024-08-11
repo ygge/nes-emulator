@@ -31,30 +31,12 @@ public class EmulatorGui {
 
     private static void runGame(String fileName, byte[] data) {
         var frame = new EmulatorFrame(fileName);
-        var runtime = new NESRuntime();
+        var runtime = new NESRuntime(frame::setFrame);
         runtime.loadGame(data);
         runtime.reset();
 
-        var bus = (EmulatorBus)runtime.getBus();
-
-        int paletteIndex = 0;
-        for (int b = 0; b < 2; ++b) {
-            for (int t = 0; t < 256; ++t) {
-                var tile = bus.getPpu().getTile(b, t);
-                frame.addTile(tile);
-            }
-        }
         while (true) {
-            frame.setPalette(PPU.COLOR_PALETTES[paletteIndex]);
-            frame.repaint();
-            if (++paletteIndex == PPU.COLOR_PALETTES.length) {
-                paletteIndex = 0;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            runtime.performSingleInstruction();
         }
     }
 }
