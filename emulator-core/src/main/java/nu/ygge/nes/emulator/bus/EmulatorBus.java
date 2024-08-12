@@ -35,7 +35,7 @@ public class EmulatorBus implements Bus {
             return ppu.readOamData();
         } else if (address == 0x2007) {
             return ppu.read();
-        } else if (address >= 0x2008 && address <  0x4000) {
+        } else if (address <  0x4000) {
             // mirroring for PPU registers
             var mirroredAddress = address & 0b00100000_00000111;
             return read(mirroredAddress);
@@ -76,15 +76,17 @@ public class EmulatorBus implements Bus {
             write(mirroredAddress, data);
         } else if (address < 0x4000) {
             // mirroring for PPU registers
-            address &= 0x2007;
-            write(address, data);
+            write(address & 0x2007, data);
         } else if (address <= 0x4013 || address == 0x4015) {
             // TODO: handle APU
+            System.out.println("APU not implemented");
         } else if (address == 0x4014) {
             // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference#OAM_DMA_.28.244014.29_.3E_write
             // TODO: implement this
+            System.out.println("not implemented");
         } else if (address == 0x4016 || address == 0x4017) {
             // TODO: handle input
+            System.out.println("input not implemented");
         } else {
             throw new NESException(String.format("Illegal write address access for %d", address));
         }
