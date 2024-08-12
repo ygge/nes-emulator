@@ -121,6 +121,10 @@ public class OpCode {
     private void performWithAddress(NESRuntime runtime, int address) {
         if (instruction.getAddressInstruction() != null) {
             instruction.getAddressInstruction().perform(runtime, address);
+        } else if (instruction.getNoArgumentWithReturnInstruction() != null) {
+            var result = instruction.getNoArgumentWithReturnInstruction().perform(runtime);
+            setStatusFlags(runtime.getCpu(), result);
+            writeValue(runtime, address, result);
         } else {
             byte value = runtime.getBus().read(address);
             var result = instruction.getSingleArgumentInstruction().perform(runtime, value);

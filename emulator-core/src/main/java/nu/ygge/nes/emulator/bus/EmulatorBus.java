@@ -21,14 +21,12 @@ public class EmulatorBus implements Bus {
 
     @Override
     public byte read(int address) {
-        // TODO: handle writing to memory that should not be read, today memory is always read first
         if (address < 0x2000) {
             // mirroring for CPU RAM
             return cpuRam.read(address & 0x7FF);
         } else if (address == 0x2000 || address == 0x2001 || address == 0x2003
                 || address == 0x2005 || address == 0x2006 || address == 0x4014) {
-            //throw new NESException(String.format("Cannot read from write only registers %d", address));
-            return 0;
+            throw new NESException(String.format("Cannot read from write only registers %d", address));
         } else if (address == 0x2002) {
             return ppu.readStatus();
         } else if (address == 0x2004) {

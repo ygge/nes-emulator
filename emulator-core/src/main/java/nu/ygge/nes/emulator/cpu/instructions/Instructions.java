@@ -53,9 +53,9 @@ public enum Instructions {
     SEC("Set carry flag", (NESRuntime runtime) -> runtime.getCpu().setStatusCarry()),
     SED("Set decimal mode", (NESRuntime runtime) -> runtime.getCpu().setStatusDecimal()),
     SEI("Set interrupt disable flag", (NESRuntime runtime) -> runtime.getCpu().setStatusInterrupt()),
-    STA("Store Accumulator in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getAccumulator(), WriteValue.Memory),
-    STX("Store Index X in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterX(), WriteValue.Memory),
-    STY("Store Index Y in Memory", StatusFlagsAffected.NONE, (NESRuntime runtime, byte value) -> runtime.getCpu().getRegisterY(), WriteValue.Memory),
+    STA("Store Accumulator in Memory", (NESRuntime runtime) -> runtime.getCpu().getAccumulator(), StatusFlagsAffected.NONE, WriteValue.Memory),
+    STX("Store Index X in Memory", (NESRuntime runtime) -> runtime.getCpu().getRegisterX(), StatusFlagsAffected.NONE, WriteValue.Memory),
+    STY("Store Index Y in Memory", (NESRuntime runtime) -> runtime.getCpu().getRegisterY(), StatusFlagsAffected.NONE, WriteValue.Memory),
     TAX("Transfer Accumulator to Index X", InstructionFunctions::transferAccumulatorToRegisterX, StatusFlagsAffected.STANDARD),
     TAY("Transfer Accumulator to Index Y", InstructionFunctions::transferAccumulatorToRegisterY, StatusFlagsAffected.STANDARD),
     TSX("Transfer Stack Pointer to Index X", InstructionFunctions::transferStackPointerToRegisterX, StatusFlagsAffected.STANDARD),
@@ -84,6 +84,10 @@ public enum Instructions {
     }
 
     Instructions(String description, NoArgumentWithReturnInstruction noArgumentWithReturnInstruction, StatusFlagsAffected statusFlagsAffected) {
+        this(description, noArgumentWithReturnInstruction, statusFlagsAffected, WriteValue.None);
+    }
+
+    Instructions(String description, NoArgumentWithReturnInstruction noArgumentWithReturnInstruction, StatusFlagsAffected statusFlagsAffected, WriteValue writeValue) {
         this.description = description;
         this.statusFlagsAffected = statusFlagsAffected;
         noArgumentInstruction = null;
@@ -91,7 +95,7 @@ public enum Instructions {
         singleArgumentInstruction = null;
         branchingInstruction = null;
         addressInstruction = null;
-        writeValue = WriteValue.None;
+        this.writeValue = writeValue;
     }
 
     Instructions(String description, StatusFlagsAffected statusFlagsAffected, SingleArgumentInstruction singleArgumentInstruction) {

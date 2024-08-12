@@ -114,7 +114,7 @@ public class PPU {
         } else if (address < 0x3000) {
             vram[mirrorVramAddress(address)] = data;
         } else if (address < 0x3f00) {
-            throw new NESException(String.format("Address %d shoule not be written to", address));
+            throw new NESException(String.format("Address %d should not be written to", address));
         } else if (address == 0x3f10 || address == 0x3f14 || address == 0x3f18 || address == 0x3f1c) {
             // these four addresses are mirrors of the same address minus 0x10
             var mirroredAddress = address - 0x3f10;
