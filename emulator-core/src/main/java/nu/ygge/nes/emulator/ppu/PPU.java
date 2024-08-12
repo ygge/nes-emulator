@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator.ppu;
 
+import lombok.Getter;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
 import nu.ygge.nes.emulator.exception.NESException;
 
@@ -24,6 +25,7 @@ public class PPU {
             new String[]{ "000000", "000000", "000000", "000000" },
     };
 
+    @Getter
     private AddressRegister addressRegister;
     private ControlRegister controlRegister;
     private MaskRegister maskRegister;
@@ -119,7 +121,7 @@ public class PPU {
             // these four addresses are mirrors of the same address minus 0x10
             var mirroredAddress = address - 0x3f10;
             paletteTable[mirroredAddress] = data;
-        } else if (address <= 0x4000) {
+        } else if (address < 0x4000) {
             var mirroredAddress = address - 0x3f00;
             paletteTable[mirroredAddress] = data;
         } else {
@@ -170,10 +172,10 @@ public class PPU {
         return new Frame(background, null);
     }
 
-    public Tile getTile(int bankIndex, int tileIndex) {
+    public Tile getTile(int bankAddress, int tileIndex) {
         var tile = new Tile();
         for (int i = 0; i < 128; ++i) {
-            int dataIndex = (bankIndex * 0x1000) + (tileIndex * 16) + i / 8;
+            int dataIndex = bankAddress + (tileIndex * 16) + i / 8;
             int x = i % 8;
             int y = (i % 64) / 8;
             byte value = (byte)((i / 64 + 1) * getBit(dataIndex, 7 - x));

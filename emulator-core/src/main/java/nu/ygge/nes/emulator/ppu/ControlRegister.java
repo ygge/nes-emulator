@@ -29,19 +29,19 @@ public class ControlRegister {
     }
 
     public byte getVramAddressIncrement() {
-        return (register & VRAM_ADD_INCREMENT) == 0 ? (byte)32 : 1;
+        return (register & VRAM_ADD_INCREMENT) == 0 ? (byte)1 : 32;
     }
 
     public int getSpritePatternAddress() {
-        return (register & SPRITE_PATTERN_ADDR) == 0 ? 0x1000 : 0;
+        return (register & SPRITE_PATTERN_ADDR) == 0 ? 0 : 0x1000;
     }
 
     public int getBackgroundPatternAddress() {
-        return (register & BACKROUND_PATTERN_ADDR) == 0 ? 0x1000 : 0;
+        return (register & BACKROUND_PATTERN_ADDR) == 0 ? 0 : 0x1000;
     }
 
     public byte getSpriteSize() {
-        return (register & SPRITE_SIZE) == 0 ? (byte)16 : 8;
+        return (register & SPRITE_SIZE) == 0 ? (byte)8 : 16;
     }
 
     public byte getMasterSlaveSelect() {

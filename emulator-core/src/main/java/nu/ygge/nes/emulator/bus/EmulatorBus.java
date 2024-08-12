@@ -64,14 +64,12 @@ public class EmulatorBus implements Bus {
             ppu.writeToOamAddress(data);
         } else if (address == 0x2004) {
             ppu.writeToOamData(data);
+        } else if (address == 0x2005) {
+            // write to scroll
         } else if (address == 0x2006) {
             ppu.writeToAddressRegister(data);
         } else if (address == 0x2007) {
             ppu.write(data);
-        } else if (address >= 0x2008 && address <  0x4000) {
-            // mirroring for PPU registers
-            var mirroredAddress = address & 0b00100000_00000111;
-            write(mirroredAddress, data);
         } else if (address < 0x4000) {
             // mirroring for PPU registers
             write(address & 0x2007, data);

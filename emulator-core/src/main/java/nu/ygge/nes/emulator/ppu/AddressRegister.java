@@ -8,7 +8,7 @@ public class AddressRegister {
     private int currentIndex = 0;
 
     public int get() {
-        return CPUUtil.toInt(value[0]) << 8 | CPUUtil.toInt(value[1]);
+        return CPUUtil.toAddress(value[0], value[1]);
     }
 
     public void write(byte value) {
@@ -31,7 +31,7 @@ public class AddressRegister {
     }
 
     private void set(int value) {
-        this.value[0] = (byte)(value&0xFF00);
+        this.value[0] = (byte)(value >> 8);
         this.value[1] = (byte)(value&0xFF);
     }
 

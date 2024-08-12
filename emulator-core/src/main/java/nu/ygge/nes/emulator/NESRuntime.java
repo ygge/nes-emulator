@@ -38,6 +38,7 @@ public class NESRuntime {
 
     public void performSingleInstruction() {
         byte opCode = cpu.readInstruction(bus);
+        //System.out.println(cpu.getProgramCounter() + " " + (opCode < 0 ? opCode+256 : opCode) + " " + ((EmulatorBus)bus).getPpu().getAddressRegister().get());
         var operation = OpCode.getOpCode(opCode);
         if (operation == null) {
             throw new IllegalArgumentException("Unknown op code: " + opCode);
