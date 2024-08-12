@@ -1,32 +1,36 @@
 package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.NESRuntime;
-import nu.ygge.nes.emulator.bus.EmulatorBus;
-import nu.ygge.nes.emulator.ppu.PPU;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class EmulatorGui {
 
-    @SuppressWarnings("resource")
     public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             throw new IllegalStateException("Program must be started with path to ROM as only parameter");
         }
         var fileName = args[0];
-        InputStream in;
-        if (fileName.startsWith("/")) {
-            in = EmulatorGui.class.getResourceAsStream(fileName);
-        } else {
-            in = new FileInputStream(fileName);
-        }
+        var data = readFile(fileName);
+        runGame(fileName.startsWith("/") ? fileName.substring(1) : fileName, data);
+    }
+
+    private static byte[] readFile(String fileName) throws IOException {
+        var in = getInputStream(fileName);
         if (in == null) {
             throw new IllegalStateException(String.format("File '%s' not found", fileName));
         }
-        var data = in.readAllBytes();
-        runGame(fileName, data);
+        return in.readAllBytes();
+    }
+
+    private static InputStream getInputStream(String fileName) throws FileNotFoundException {
+        if (fileName.startsWith("/")) {
+            return EmulatorGui.class.getResourceAsStream(fileName);
+        }
+        return new FileInputStream(fileName);
     }
 
     private static void runGame(String fileName, byte[] data) {
