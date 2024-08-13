@@ -101,4 +101,8 @@ public class NESRuntime {
         bus.ppuTick(2 * 3); // this takes two more cycles
         resetProgramCounter(InterruptAddress.NMI);
     }
+
+    public void keyCallback(int bitValue, boolean set) {
+        ((EmulatorBus)bus).getJoypad().keyCallback(bitValue, set);
+    }
 }

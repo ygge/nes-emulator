@@ -3,6 +3,7 @@ package nu.ygge.nes.emulator.bus;
 import lombok.Getter;
 import nu.ygge.nes.emulator.cpu.CPURAM;
 import nu.ygge.nes.emulator.exception.NESException;
+import nu.ygge.nes.emulator.input.Joypad;
 import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.PPU;
 
@@ -11,11 +12,13 @@ public class EmulatorBus implements Bus {
 
     private final CPURAM cpuRam;
     private final PPU ppu;
+    private final Joypad joypad;
     private byte[] prgRom;
 
     public EmulatorBus(byte[] prgRom) {
         cpuRam = new CPURAM();
         ppu = new PPU();
+        joypad = new Joypad();
         this.prgRom = prgRom;
     }
 
@@ -40,8 +43,10 @@ public class EmulatorBus implements Bus {
         } else if (address <= 0x4015) {
             // TODO: handle APU
             return 0;
-        } else if (address == 0x4016 || address == 0x4017) {
-            // TODO: handle input
+        } else if (address == 0x4016) {
+            return joypad.read();
+        } else if (address == 0x4017) {
+            // TODO: handle second joypad
             return 0;
         } else if (address >= 0x8000) {
             return prgRom[address - 0x8000];
@@ -80,9 +85,10 @@ public class EmulatorBus implements Bus {
             // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference#OAM_DMA_.28.244014.29_.3E_write
             // TODO: implement this
             System.out.println("not implemented");
-        } else if (address == 0x4016 || address == 0x4017) {
-            // TODO: handle input
-            System.out.println("input not implemented");
+        } else if (address == 0x4016) {
+            joypad.write(data);
+        } else if (address == 0x4017) {
+            // TODO: handle second joypad
         } else {
             throw new NESException(String.format("Illegal write address access for %d", address));
         }

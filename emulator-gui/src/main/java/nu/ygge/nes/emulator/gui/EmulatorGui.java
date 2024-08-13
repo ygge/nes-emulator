@@ -36,6 +36,10 @@ public class EmulatorGui {
     private static void runGame(String fileName, byte[] data) {
         var frame = new EmulatorFrame(fileName);
         var runtime = new NESRuntime(frame::setFrame);
+        frame.setKeyCallback((key, set) -> {
+            runtime.keyCallback(key.getBitValue(), set);
+            return true;
+        });
         runtime.loadGame(data);
         runtime.reset();
 
