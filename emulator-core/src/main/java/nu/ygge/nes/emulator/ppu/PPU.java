@@ -6,23 +6,15 @@ import nu.ygge.nes.emulator.exception.NESException;
 
 public class PPU {
 
-    public static final String[][] COLOR_PALETTES = {
-            new String[]{ "626262", "ABABAB", "FFFFFF", "FFFFFF" },
-            new String[]{ "002E98", "0064F4", "4AB5FF", "B6E1FF" },
-            new String[]{ "0C11C2", "353CFF", "858CFF", "CED1FF" },
-            new String[]{ "3B00C2", "761BFF", "C86AFF", "E9C3FF" },
-            new String[]{ "650098", "AE0AF4", "FF58FF", "FFBCFF" },
-            new String[]{ "7D004E", "CF0C8F", "FF5BE2", "FFBDF4" },
-            new String[]{ "7D0000", "CF231C", "FF726A", "FFC6C3" },
-            new String[]{ "651900", "AE4700", "FF9702", "FFD59A" },
-            new String[]{ "3B3600", "766F00", "C8C100", "E9E681" },
-            new String[]{ "0C4F00", "359000", "85E300", "CEF481" },
-            new String[]{ "005B00", "00A100", "4AF502", "B6FB9A" },
-            new String[]{ "005900", "009E1C", "29F26A", "A9FAC3" },
-            new String[]{ "00494E", "00888F", "29DBE2", "A9F0F4" },
-            new String[]{ "000000", "000000", "4E4E4E", "B8B8B8" },
-            new String[]{ "000000", "000000", "000000", "000000" },
-            new String[]{ "000000", "000000", "000000", "000000" },
+    private static final String[] COLOR_PALETTE = {
+            "626262", "002E98", "0C11C2", "3B00C2", "650098", "7D004E", "7D0000", "651900",
+            "3B3600", "0C4F00", "005B00", "005900", "00494E", "000000", "000000", "000000",
+            "ABABAB", "0064F4", "353CFF", "761BFF", "AE0AF4", "CF0C8F", "CF231C", "AE4700",
+            "766F00", "359000", "00A100", "009E1C", "00888F", "000000", "000000", "000000",
+            "FFFFFF", "4AB5FF", "858CFF", "C86AFF", "FF58FF", "FF5BE2", "FF726A", "FF9702",
+            "C8C100", "85E300", "4AF502", "29F26A", "29DBE2", "4E4E4E", "000000", "000000",
+            "FFFFFF", "B6E1FF", "CED1FF", "E9C3FF", "FFBCFF", "FFBDF4", "FFC6C3", "FFD59A",
+            "E9E681", "CEF481", "B6FB9A", "A9FAC3", "A9F0F4", "B8B8B8", "000000", "000000"
     };
 
     @Getter
@@ -163,17 +155,19 @@ public class PPU {
     public Frame getFrame() {
         int bank = controlRegister.getBackgroundPatternAddress();
         var background = new Tile[30][32];
+        int index = 0;
         for (int y = 0; y < background.length; y++) {
             for (int x = 0; x < background[y].length; x++) {
-                var tile = vram[y * background[y].length + x];
-                background[y][x] = getTile(bank, tile);
+                var tile = vram[index];
+                background[y][x] = getTile(bank, tile, index);
+                ++index;
             }
         }
         return new Frame(background, null);
     }
 
-    public Tile getTile(int bankAddress, int tileIndex) {
-        var tile = new Tile();
+    public Tile getTile(int bankAddress, int tileIndex, int index) {
+        var tile = new Tile(createPalette(index % 32, index / 32));
         for (int i = 0; i < 128; ++i) {
             int dataIndex = bankAddress + (tileIndex * 16) + i / 8;
             int x = i % 8;
@@ -182,6 +176,28 @@ public class PPU {
             tile.add(x, y, value);
         }
         return tile;
+    }
+
+    private String[] createPalette(int column, int row) {
+        var index = row / 4 * 8 + column / 4;
+        var value = vram[0x3c0 + index];
+        var paletteIndex = getPaletteIndex(column, row, value);
+        var paletteStart = paletteIndex * 4 + 1;
+
+        var palette = new String[4];
+        palette[0] = COLOR_PALETTE[paletteTable[0]];
+        palette[1] = COLOR_PALETTE[paletteTable[paletteStart]];
+        palette[2] = COLOR_PALETTE[paletteTable[paletteIndex + 1]];
+        palette[3] = COLOR_PALETTE[paletteTable[paletteIndex + 2]];
+        return palette;
+    }
+
+    private int getPaletteIndex(int column, int row, byte value) {
+        var rowIndex = (row % 4) / 2;
+        if ((column % 4) / 2 == 0) {
+            return rowIndex == 0 ? value & 3 : (value >> 4) & 3;
+        }
+        return rowIndex == 0 ? (value >> 2) & 3 : (value >> 6) & 3;
     }
 
     private int mirrorVramAddress(int address) {
