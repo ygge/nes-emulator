@@ -2,6 +2,7 @@ package nu.ygge.nes.emulator.cpu;
 
 import lombok.Getter;
 import lombok.Setter;
+import nu.ygge.nes.emulator.FileLogger;
 import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.exception.NESException;
 
@@ -27,6 +28,11 @@ public class CPU {
         var value = bus.read(programCounter);
         ++programCounter;
         return value;
+    }
+
+    public void setAccumulator(byte value) {
+        accumulator = value;
+        FileLogger.log(String.format("setAccumulator %d", value < 0 ? value+256 : value));
     }
 
     public void addCycles(int cycles) {

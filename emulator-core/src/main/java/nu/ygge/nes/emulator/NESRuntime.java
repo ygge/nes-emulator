@@ -8,6 +8,10 @@ import nu.ygge.nes.emulator.cpu.*;
 import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.Tile;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -16,9 +20,9 @@ import java.util.function.Supplier;
 public class NESRuntime {
 
     private final CPU cpu;
+    private final Consumer<Frame> frameConsumer;
     private Bus bus;
     private int cycles;
-    private Consumer<Frame> frameConsumer;
 
     public NESRuntime() {
         this(null);
@@ -38,7 +42,10 @@ public class NESRuntime {
 
     public void performSingleInstruction() {
         byte opCode = cpu.readInstruction(bus);
-        //System.out.println(cpu.getProgramCounter() + " " + (opCode < 0 ? opCode+256 : opCode) + " " + ((EmulatorBus)bus).getPpu().getAddressRegister().get());
+        FileLogger.log(cpu.getProgramCounter()
+                + " " + (opCode < 0 ? opCode+256 : opCode)
+                + " " + (getCpu().getAccumulator() < 0 ? getCpu().getAccumulator()+256 : getCpu().getAccumulator())
+                + " " + ((EmulatorBus)bus).getPpu().getAddressRegister().get());
         var operation = OpCode.getOpCode(opCode);
         if (operation == null) {
             throw new IllegalArgumentException("Unknown op code: " + opCode);

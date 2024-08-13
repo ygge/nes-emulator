@@ -32,9 +32,10 @@ public class EmulatorPanel extends JPanel {
         super.paintComponent(g);
 
         if (currentFrame != null) {
-            for (int y = 0; y < currentFrame.getBackground().length; ++y) {
-                for (int x = 0; x < currentFrame.getBackground()[y].length; ++x) {
-                    paintTile(g, x * 8, y * 8, currentFrame.getBackground()[y][x]);
+            Tile[][] background = currentFrame.getBackground();
+            for (int y = 0; y < background.length; ++y) {
+                for (int x = 0; x < background[y].length; ++x) {
+                    paintTile(g, x * 8 * SCALE, y * 8 * SCALE, background[y][x]);
                 }
             }
         }
@@ -55,5 +56,6 @@ public class EmulatorPanel extends JPanel {
 
     public void setPpuFrame(Frame ppuFrame) {
         currentFrame = ppuFrame;
+        repaint();
     }
 }

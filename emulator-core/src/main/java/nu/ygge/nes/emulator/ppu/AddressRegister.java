@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.FileLogger;
 import nu.ygge.nes.emulator.cpu.CPUUtil;
 
 public class AddressRegister {
@@ -19,7 +20,7 @@ public class AddressRegister {
 
     public void add(byte value) {
         var newValue = (byte)(this.value[1] + value);
-        if (newValue < this.value[1]) {
+        if (newValue >= 0 && this.value[1] < 0) {
             ++this.value[0];
         }
         this.value[1] = newValue;
