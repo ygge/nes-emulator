@@ -15,16 +15,6 @@ public class ControlRegister {
         register = data & 0xff;
     }
 
-    public int getNameTableAddress() {
-        return switch (register & 3) {
-            case 0 -> 0x2000;
-            case 1 -> 0x2400;
-            case 2 -> 0x2800;
-            case 3 -> 0x2c00;
-            default -> throw new IllegalStateException("Unexpected value: " + (register & 3));
-        };
-    }
-
     public int getVramAddressIncrement() {
         return (register & VRAM_ADD_INCREMENT) == 0 ? 1 : 32;
     }

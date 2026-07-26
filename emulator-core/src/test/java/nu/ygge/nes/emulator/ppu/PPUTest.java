@@ -9,6 +9,7 @@ class PPUTest {
 
     private static final int CYCLES_PER_SCANLINE = 341;
     private static final int VBLANK_SCANLINE = 241;
+    private static final int SCANLINES_PER_FRAME = 262;
     private static final int VBLANK_FLAG = 0x80;
     private static final int SPRITE_ZERO_HIT_FLAG = 0x40;
     // both masks also enable rendering of the leftmost eight pixels
@@ -63,17 +64,17 @@ class PPUTest {
 
     @Test
     void verifyIncrementingTheAddressOnlyCarriesOnALowByteOverflow() {
-        var register = new AddressRegister(new WriteLatch());
+        var register = new ScrollAddress();
 
-        register.write((byte) 0x21);
-        register.write((byte) 0x7f);
-        register.add(1);
-        Assertions.assertEquals(0x2180, register.get());
+        register.writeAddress((byte) 0x21);
+        register.writeAddress((byte) 0x7f);
+        register.incrementAddress(1);
+        Assertions.assertEquals(0x2180, register.getAddress());
 
-        register.write((byte) 0x21);
-        register.write((byte) 0xff);
-        register.add(1);
-        Assertions.assertEquals(0x2200, register.get());
+        register.writeAddress((byte) 0x21);
+        register.writeAddress((byte) 0xff);
+        register.incrementAddress(1);
+        Assertions.assertEquals(0x2200, register.getAddress());
     }
 
     @Test
@@ -119,6 +120,7 @@ class PPUTest {
     void verifyBackgroundTilesArePaintedWithTheirPalette() {
         writeVram(0x2000, 1);
         ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        writeScroll(0, 0);
 
         var frame = renderFrame();
 
@@ -134,6 +136,7 @@ class PPUTest {
         writeVram(0x2000, 1);
         writeVram(0x23c0, 0b11); // the top left quadrant uses palette 3
         ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        writeScroll(0, 0);
 
         Assertions.assertEquals(0x30, renderFrame().getPixel(0, 0));
     }
@@ -154,6 +157,39 @@ class PPUTest {
         writeScroll(0, 8);
 
         Assertions.assertEquals(BACKGROUND_COLOR, renderFrame().getPixel(0, 0));
+    }
+
+    @Test
+    void verifyAVerticalScrollWrittenDuringRenderingOnlyAffectsTheNextFrame() {
+        writeVram(0x2020, 1); // the tile in the second row
+        ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        writeScroll(0, 0);
+        runScanlines(SCANLINES_PER_FRAME); // let the starting position take effect
+
+        runScanlines(100);
+        writeScroll(0, 8);
+        runScanlines(141);
+        Assertions.assertEquals(BACKDROP, ppu.getFrame().getPixel(0, 0));
+
+        runScanlines(SCANLINES_PER_FRAME - VBLANK_SCANLINE);
+        runScanlines(VBLANK_SCANLINE);
+        Assertions.assertEquals(BACKGROUND_COLOR, ppu.getFrame().getPixel(0, 0));
+    }
+
+    @Test
+    void verifyAHorizontalScrollWrittenDuringRenderingAffectsTheRestOfTheFrame() {
+        fillNameTableColumn(1);
+        ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        writeScroll(0, 0);
+        runScanlines(SCANLINES_PER_FRAME); // let the starting position take effect
+
+        runScanlines(100);
+        writeScroll(8, 0);
+        runScanlines(141);
+
+        var frame = ppu.getFrame();
+        Assertions.assertEquals(BACKDROP, frame.getPixel(0, 0));
+        Assertions.assertEquals(BACKGROUND_COLOR, frame.getPixel(0, 120));
     }
 
     @Test
@@ -183,6 +219,7 @@ class PPUTest {
         writeVram(0x2000, 1);
         writeOam(0, 0, 1, 0, 0);
         ppu.writeToMaskRegister((byte) (SHOW_BACKGROUND | SHOW_SPRITES));
+        writeScroll(0, 0);
 
         Assertions.assertEquals(SPRITE_COLOR, renderFrame().getPixel(0, 1));
     }
@@ -192,6 +229,7 @@ class PPUTest {
         writeVram(0x2000, 1);
         writeOam(0, 0, 1, 0x20, 0);
         ppu.writeToMaskRegister((byte) (SHOW_BACKGROUND | SHOW_SPRITES));
+        writeScroll(0, 0);
 
         Assertions.assertEquals(BACKGROUND_COLOR, renderFrame().getPixel(0, 1));
     }
@@ -201,13 +239,72 @@ class PPUTest {
         writeVram(0x2000, 1);
         writeOam(0, 0, 1, 0, 0);
         ppu.writeToMaskRegister((byte) (SHOW_BACKGROUND | SHOW_SPRITES));
+        writeScroll(0, 0);
 
         renderFrame();
 
         Assertions.assertEquals(SPRITE_ZERO_HIT_FLAG, ppu.readStatus() & SPRITE_ZERO_HIT_FLAG);
     }
 
+    @Test
+    void verifyScrollingPastTheEndOfANameTableContinuesInTheNextOne() {
+        ppu.reset(chrRom, Mirroring.VERTICAL);
+        writeVram(0x3f00, BACKDROP, BACKGROUND_COLOR);
+        writeVram(0x2400, 1); // the first tile of the second name table
+        ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        ppu.writeToControlRegister((byte) 0); // start out in the first name table
+        writeScroll(248, 0); // eight pixels short of a whole screen
+
+        var frame = renderFrame();
+
+        Assertions.assertEquals(BACKDROP, frame.getPixel(0, 0));
+        Assertions.assertEquals(BACKGROUND_COLOR, frame.getPixel(8, 0));
+    }
+
+    @Test
+    void verifyTheControlRegisterPicksTheNameTableToRenderFrom() {
+        ppu.reset(chrRom, Mirroring.VERTICAL);
+        writeVram(0x3f00, BACKDROP, BACKGROUND_COLOR);
+        writeVram(0x2000, 1); // a tile in the first name table only
+        ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        writeScroll(0, 0);
+
+        ppu.writeToControlRegister((byte) 0b01); // the second name table, which is empty
+
+        Assertions.assertEquals(BACKDROP, renderFrame().getPixel(0, 0));
+    }
+
+    /**
+     * How a game keeps a still status bar while it is scrolled into the second name table: the
+     * control register still selects that table, but because the two registers are shared, the
+     * address write it makes during vblank points the next frame back at the first one.
+     */
+    @Test
+    void verifyAnAddressWriteTakesTheNameTableBackOverFromTheControlRegister() {
+        ppu.reset(chrRom, Mirroring.VERTICAL);
+        writeVram(0x3f00, BACKDROP, BACKGROUND_COLOR);
+        writeVram(0x2000, 1); // a tile in the first name table only
+        ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+
+        ppu.writeToControlRegister((byte) 0b01); // select the second name table
+        setAddress(0x2000); // and then point the address back at the first one
+        writeScroll(0, 0);
+
+        Assertions.assertEquals(BACKGROUND_COLOR, renderFrame().getPixel(0, 0));
+    }
+
+    @Test
+    void verifyAnAddressWriteMovesTheVerticalScrollWithIt() {
+        writeVram(0x2020, 1); // the tile in the second row
+        ppu.writeToMaskRegister((byte) SHOW_BACKGROUND);
+        setAddress(0x2020); // the same address puts the second row at the top of the screen
+
+        Assertions.assertEquals(BACKGROUND_COLOR, renderFrame().getPixel(0, 0));
+    }
+
     private Frame renderFrame() {
+        // the vertical scroll is only taken over between frames, so let a whole frame pass first
+        runScanlines(SCANLINES_PER_FRAME);
         runScanlines(VBLANK_SCANLINE);
         return ppu.getFrame();
     }
@@ -215,6 +312,12 @@ class PPUTest {
     private void runScanlines(int count) {
         for (int i = 0; i < count; ++i) {
             ppu.tick(CYCLES_PER_SCANLINE);
+        }
+    }
+
+    private void fillNameTableColumn(int column) {
+        for (int row = 0; row < 30; ++row) {
+            writeVram(0x2000 + row * 32 + column, 1);
         }
     }
 

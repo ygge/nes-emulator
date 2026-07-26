@@ -19,13 +19,11 @@ public class PPU {
     private static final int SPRITES_PER_SCANLINE = 8;
     private static final int SPRITE_PALETTE_OFFSET = 0x10;
 
-    private final WriteLatch writeLatch = new WriteLatch();
     private final boolean[] backgroundOpaque = new boolean[Frame.WIDTH];
     private final int[] scanlineSprites = new int[SPRITES_PER_SCANLINE];
 
     @Getter
-    private AddressRegister addressRegister;
-    private ScrollRegister scrollRegister;
+    private ScrollAddress scrollAddress;
     private ControlRegister controlRegister;
     private MaskRegister maskRegister;
     private StatusRegister statusRegister;
@@ -42,9 +40,7 @@ public class PPU {
     }
 
     public void reset(byte[] chrRom, Mirroring mirroring) {
-        writeLatch.reset();
-        addressRegister = new AddressRegister(writeLatch);
-        scrollRegister = new ScrollRegister(writeLatch);
+        scrollAddress = new ScrollAddress();
         controlRegister = new ControlRegister();
         maskRegister = new MaskRegister();
         statusRegister = new StatusRegister();
@@ -66,16 +62,17 @@ public class PPU {
     }
 
     public void writeToAddressRegister(byte value) {
-        addressRegister.write(value);
+        scrollAddress.writeAddress(value);
     }
 
     public void writeToScrollRegister(byte value) {
-        scrollRegister.write(value);
+        scrollAddress.writeScroll(value);
     }
 
     public void writeToControlRegister(byte value) {
         var before = controlRegister.canGenerateNMI();
         controlRegister.update(value);
+        scrollAddress.writeNameTable(value);
         if (!before && controlRegister.canGenerateNMI() && statusRegister.isInVBlankStatus()) {
             nmiInterrupt = true;
         }
@@ -88,7 +85,7 @@ public class PPU {
     public byte readStatus() {
         var data = statusRegister.getSnapshot();
         statusRegister.resetVBlankStatus();
-        writeLatch.reset();
+        scrollAddress.resetWriteLatch();
         return data;
     }
 
@@ -115,11 +112,11 @@ public class PPU {
     }
 
     public void incrementVramAddress() {
-        addressRegister.add(controlRegister.getVramAddressIncrement());
+        scrollAddress.incrementAddress(controlRegister.getVramAddressIncrement());
     }
 
     public byte read() {
-        var address = addressRegister.get();
+        var address = scrollAddress.getAddress();
         incrementVramAddress();
         if (address < 0x2000) {
             // reads from the pattern table are delayed by one read
@@ -138,7 +135,7 @@ public class PPU {
     }
 
     public void write(byte data) {
-        var address = addressRegister.get();
+        var address = scrollAddress.getAddress();
         if (address < 0x2000) {
             if (patternTableIsRam) {
                 patternTable[address] = data;
@@ -175,7 +172,14 @@ public class PPU {
 
     private void finishScanline() {
         if (scanline < VISIBLE_SCANLINES) {
+            // the horizontal position is taken over from the temporary register once per scanline
+            if (isRenderingEnabled()) {
+                scrollAddress.beginScanline();
+            }
             renderScanline(scanline);
+            if (isRenderingEnabled()) {
+                scrollAddress.endScanline();
+            }
         }
         ++scanline;
         if (scanline == VBLANK_SCANLINE) {
@@ -187,10 +191,22 @@ public class PPU {
             }
         } else if (scanline >= SCANLINES_PER_FRAME) {
             scanline = 0;
+            // the vertical position, on the other hand, is only taken over between frames
+            if (isRenderingEnabled()) {
+                scrollAddress.beginFrame();
+            }
             statusRegister.setVBlankStatus(false);
             statusRegister.setSpriteZeroHit(false);
             statusRegister.setSpriteOverflow(false);
         }
+    }
+
+    /**
+     * With the screen turned off the address register is left alone, so that a game can take its
+     * time writing to video memory without rendering pulling the address out from under it.
+     */
+    private boolean isRenderingEnabled() {
+        return maskRegister.isShowBackground() || maskRegister.isShowSprite();
     }
 
     private void renderScanline(int y) {
@@ -208,24 +224,21 @@ public class PPU {
             return;
         }
         var bank = controlRegister.getBackgroundPatternAddress();
-        var sourceY = y + scrollRegister.getY();
-        var baseNameTable = controlRegister.getNameTableAddress();
-        if (sourceY >= VISIBLE_SCANLINES) {
-            sourceY -= VISIBLE_SCANLINES;
-            baseNameTable ^= 0x800;
-        }
-        var tileRow = sourceY >> 3;
-        var fineY = sourceY & 7;
+        var baseNameTable = scrollAddress.getNameTable();
+        var tileRow = scrollAddress.getTileRow();
+        var fineY = scrollAddress.getRowWithinTile();
+        var firstColumn = scrollAddress.getTileColumn();
+        var fineX = scrollAddress.getColumnWithinTile();
         int loadedColumn = -1, loadedNameTable = -1;
         int lowPlane = 0, highPlane = 0, paletteBase = 0;
         for (int x = 0; x < Frame.WIDTH; ++x) {
-            var sourceX = x + scrollRegister.getX();
+            var sourceX = x + fineX;
+            var tileColumn = firstColumn + (sourceX >> 3);
             var nameTable = baseNameTable;
-            if (sourceX >= Frame.WIDTH) {
-                sourceX -= Frame.WIDTH;
+            if (tileColumn >= TILES_PER_ROW) {
+                tileColumn -= TILES_PER_ROW;
                 nameTable ^= 0x400;
             }
-            var tileColumn = sourceX >> 3;
             if (tileColumn != loadedColumn || nameTable != loadedNameTable) {
                 loadedColumn = tileColumn;
                 loadedNameTable = nameTable;

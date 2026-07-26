@@ -40,17 +40,17 @@ public class EmulatorGui {
     }
 
     private static void runGame(String fileName, byte[] data) throws InterruptedException, InvocationTargetException {
-        var created = new AtomicReference<EmulatorFrame>();
-        SwingUtilities.invokeAndWait(() -> created.set(new EmulatorFrame(fileName)));
-        var window = created.get();
-
+        var window = new AtomicReference<EmulatorFrame>();
         var pacer = new FramePacer();
         var runtime = new NESRuntime(ppuFrame -> {
-            window.setFrame(ppuFrame);
+            window.get().setFrame(ppuFrame);
             pacer.awaitNextFrame();
         });
         runtime.loadGame(data);
         runtime.reset();
+
+        var controller = runtime.getBus().getController();
+        SwingUtilities.invokeAndWait(() -> window.set(new EmulatorFrame(fileName, controller)));
 
         while (true) {
             runtime.performSingleInstruction();

@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator.gui;
 
+import nu.ygge.nes.emulator.input.Controller;
 import nu.ygge.nes.emulator.ppu.Frame;
 
 import javax.swing.*;
@@ -9,15 +10,17 @@ public class EmulatorFrame extends JFrame {
 
     private final EmulatorPanel panel = new EmulatorPanel();
 
-    public EmulatorFrame(String name) {
+    public EmulatorFrame(String name, Controller controller) {
         super(name);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         add(panel);
-        //addKeyListener(this);
+        addKeyListener(new ControllerKeyListener(controller));
+        setFocusable(true);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
+        requestFocusInWindow();
     }
 
     public void setFrame(Frame ppuFrame) {

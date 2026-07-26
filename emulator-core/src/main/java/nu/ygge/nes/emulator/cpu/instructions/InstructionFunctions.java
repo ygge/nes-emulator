@@ -120,13 +120,13 @@ public final class InstructionFunctions {
         return addition(runtime, value, runtime.getCpu().isStatusCarry() ? 1 : 0);
     }
 
-    private static byte addition(NESRuntime runtime, byte value, int delta) {
-        var sum = CPUUtil.toInt(runtime.getCpu().getAccumulator());
-        sum += delta;
-        sum += CPUUtil.toInt(value);
+    private static byte addition(NESRuntime runtime, byte value, int carry) {
+        var accumulator = CPUUtil.toInt(runtime.getCpu().getAccumulator());
+        var addend = CPUUtil.toInt(value);
+        var sum = accumulator + addend + carry;
         var result = (byte) sum;
-        var v = CPUUtil.toInt(value) + (delta > 1 ? delta : 0);
-        if (((result ^ v) & (result ^ CPUUtil.toInt(runtime.getCpu().getAccumulator())) & 0x80) != 0) {
+        // the sign of the result can only be wrong when both operands share a sign that the result does not
+        if (((result ^ addend) & (result ^ accumulator) & 0x80) != 0) {
             runtime.getCpu().setStatusOverflow();
         } else {
             runtime.getCpu().clearStatusOverflow();
@@ -139,8 +139,12 @@ public final class InstructionFunctions {
         return result;
     }
 
+    /**
+     * Subtraction is an addition of the one's complement, where the carry flag carries the inverted
+     * borrow both in and out. Negating the value instead loses the borrow out whenever it is zero.
+     */
     public static byte subtractMemoryFromAccumulator(NESRuntime runtime, byte value) {
-        return addition(runtime, (byte)(~value + 1), runtime.getCpu().isStatusCarry() ? 0 : 255);
+        return addition(runtime, (byte) ~value, runtime.getCpu().isStatusCarry() ? 1 : 0);
     }
 
     public static byte incrementRegisterX(NESRuntime runtime) {

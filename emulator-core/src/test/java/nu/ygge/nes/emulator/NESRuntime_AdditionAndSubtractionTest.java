@@ -193,4 +193,86 @@ public class NESRuntime_AdditionAndSubtractionTest {
         Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(5));
         Assertions.assertFalse(runtime.getCpu().isStatusOverflow());
     }
+
+    /**
+     * The sequence Super Mario Bros uses to place the player relative to an edge of the screen.
+     * Subtracting zero from the low byte must not borrow from the high byte, or the player ends up
+     * a whole page to the left of where it belongs.
+     */
+    @Test
+    void verifySubtractingZeroDoesNotBorrowFromTheHighByte() {
+        memoryWriter.write(OpCodes.SEC.getCode());
+        subtractImmediateFromValue((byte) 0x90, (byte) 0x00, 4);
+        subtractImmediateFromValue((byte) 0x00, (byte) 0x00, 5);
+
+        run();
+
+        Assertions.assertEquals((byte) 0x90, runtime.getBus().read(4));
+        Assertions.assertEquals((byte) 0x00, runtime.getBus().read(5));
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @Test
+    void verifyASubtractionThatNeedsNoBorrowLeavesTheCarryFlagSet() {
+        memoryWriter.write(OpCodes.SEC.getCode());
+        subtractImmediateFromValue((byte) 0x05, (byte) 0x05, 0);
+
+        run();
+
+        Assertions.assertEquals((byte) 0x00, runtime.getBus().read(0));
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+        Assertions.assertTrue(runtime.getCpu().isStatusZero());
+    }
+
+    @Test
+    void verifyASubtractionThatNeedsABorrowClearsTheCarryFlag() {
+        memoryWriter.write(OpCodes.SEC.getCode());
+        subtractImmediateFromValue((byte) 0x04, (byte) 0x05, 0);
+
+        run();
+
+        Assertions.assertEquals((byte) 0xFF, runtime.getBus().read(0));
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+    }
+
+    @Test
+    void verifyAClearedCarryFlagSubtractsAnAdditionalOne() {
+        memoryWriter.write(OpCodes.CLC.getCode());
+        subtractImmediateFromValue((byte) 0x05, (byte) 0x04, 0);
+        // the borrow out of the first subtraction feeds into the second one
+        subtractImmediateFromValue((byte) 0x05, (byte) 0x04, 1);
+
+        run();
+
+        Assertions.assertEquals((byte) 0x00, runtime.getBus().read(0));
+        Assertions.assertEquals((byte) 0x01, runtime.getBus().read(1));
+        Assertions.assertTrue(runtime.getCpu().isStatusCarry());
+    }
+
+    @Test
+    void verifySubtractingANegativeValueFromAPositiveOneOverflows() {
+        memoryWriter.write(OpCodes.SEC.getCode());
+        subtractImmediateFromValue((byte) 0x50, (byte) 0xB0, 0);
+
+        run();
+
+        Assertions.assertEquals((byte) 0xA0, runtime.getBus().read(0));
+        Assertions.assertTrue(runtime.getCpu().isStatusOverflow());
+        Assertions.assertFalse(runtime.getCpu().isStatusCarry());
+    }
+
+    private void subtractImmediateFromValue(byte value, byte subtrahend, int targetAddress) {
+        memoryWriter.write(OpCodes.LDAI.getCode());
+        memoryWriter.write(value);
+        memoryWriter.write(OpCodes.SBCI.getCode());
+        memoryWriter.write(subtrahend);
+        memoryWriter.write(OpCodes.STAZ.getCode());
+        memoryWriter.write((byte) targetAddress);
+    }
+
+    private void run() {
+        while (runtime.getCpu().getProgramCounter() < memoryWriter.getAddress()) {
+            runtime.performSingleInstruction();
+        }
+    }
 }

@@ -2,6 +2,7 @@ package nu.ygge.nes.emulator.bus;
 
 import lombok.Getter;
 import nu.ygge.nes.emulator.cpu.CPURAM;
+import nu.ygge.nes.emulator.input.Controller;
 import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.PPU;
 
@@ -13,9 +14,11 @@ public class EmulatorBus implements Bus {
     private static final int PRG_RAM_SIZE = 0x2000;
     private static final int OAM_DMA_PAGE_SIZE = 256;
     private static final int OAM_DMA_CYCLES = 513;
+    private static final int CONTROLLER_ONE = 0x4016;
 
     private final CPURAM cpuRam;
     private final PPU ppu;
+    private final Controller controller = new Controller();
     private final byte[] prgRom;
     private final byte[] prgRam = new byte[PRG_RAM_SIZE];
     private final byte[] dmaPage = new byte[OAM_DMA_PAGE_SIZE];
@@ -35,8 +38,10 @@ public class EmulatorBus implements Bus {
         } else if (address < 0x4000) {
             // mirroring for PPU registers
             return readRegister(0x2000 + (address & 7));
+        } else if (address == CONTROLLER_ONE) {
+            return controller.read();
         } else if (address < PRG_RAM_START) {
-            // TODO: handle APU and input
+            // TODO: handle the APU and the second controller port
             return 0;
         } else if (address < PRG_ROM_START) {
             return prgRam[address - PRG_RAM_START];
@@ -55,10 +60,13 @@ public class EmulatorBus implements Bus {
             writeRegister(0x2000 + (address & 7), data);
         } else if (address == 0x4014) {
             performOamDma(data);
+        } else if (address == CONTROLLER_ONE) {
+            // the strobe is shared by both controller ports
+            controller.write(data);
         } else if (address >= PRG_RAM_START && address < PRG_ROM_START) {
             prgRam[address - PRG_RAM_START] = data;
         }
-        // APU, input and writes to cartridge ROM are ignored for now
+        // the APU and writes to cartridge ROM are ignored for now
     }
 
     @Override

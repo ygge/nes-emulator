@@ -2,10 +2,17 @@ package nu.ygge.nes.emulator.util;
 
 import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
+import nu.ygge.nes.emulator.input.Controller;
 
 public class TestBus implements Bus {
 
     private final byte[] ram = new byte[65536];
+    private final Controller controller = new Controller();
+
+    @Override
+    public Controller getController() {
+        return controller;
+    }
 
     @Override
     public byte read(int address) {

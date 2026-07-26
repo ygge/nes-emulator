@@ -3,11 +3,13 @@ package nu.ygge.nes.snake;
 import lombok.Getter;
 import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
+import nu.ygge.nes.emulator.input.Controller;
 
 @Getter
 public class SnakeBus implements Bus {
 
     private final byte[] memory = new byte[65536];
+    private final Controller controller = new Controller();
 
     @Override
     public byte read(int address) {

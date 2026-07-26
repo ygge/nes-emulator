@@ -1,5 +1,6 @@
 package nu.ygge.nes.emulator.bus;
 
+import nu.ygge.nes.emulator.input.Button;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +47,20 @@ class EmulatorBusTest {
         bus.write(0x2006, (byte) 0x00);
         bus.read(0x2007); // reads outside the palette are delayed by one read
         Assertions.assertEquals(0x42, bus.read(0x2007));
+    }
+
+    @Test
+    void verifyTheControllerIsReachableThroughItsPort() {
+        var bus = new EmulatorBus(new byte[32768]);
+        bus.getController().setPressed(Button.START, true);
+
+        bus.write(0x4016, (byte) 1);
+        bus.write(0x4016, (byte) 0);
+
+        Assertions.assertEquals(0, bus.read(0x4016)); // a
+        Assertions.assertEquals(0, bus.read(0x4016)); // b
+        Assertions.assertEquals(0, bus.read(0x4016)); // select
+        Assertions.assertEquals(1, bus.read(0x4016)); // start
     }
 
     @Test
