@@ -1,59 +1,57 @@
 package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.ppu.Frame;
-import nu.ygge.nes.emulator.ppu.PPU;
-import nu.ygge.nes.emulator.ppu.Tile;
+import nu.ygge.nes.emulator.ppu.SystemPalette;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 
 public class EmulatorPanel extends JPanel {
 
-    private static final int SCALE = 4;
-    private static final int WIDTH = 256 * SCALE;
-    private static final int HEIGHT = 240 * SCALE;
-    private final Color[] palette = new Color[4];
-    private Frame currentFrame;
+    private static final int SCALE = 3;
+
+    private final BufferedImage[] buffers = new BufferedImage[2];
+    private final int[][] bufferPixels = new int[2][];
+    private volatile BufferedImage visibleBuffer;
+    private int backBuffer;
 
     public EmulatorPanel() {
-        for (int i = 0; i < palette.length; ++i) {
-            int v = Integer.parseInt(PPU.COLOR_PALETTES[0][i], 16);
-            palette[i] = new Color((v >> 16), (v >> 8) & 0xFF, v & 0xFF);
+        for (int i = 0; i < buffers.length; ++i) {
+            buffers[i] = new BufferedImage(Frame.WIDTH, Frame.HEIGHT, BufferedImage.TYPE_INT_RGB);
+            bufferPixels[i] = ((DataBufferInt) buffers[i].getRaster().getDataBuffer()).getData();
         }
+        visibleBuffer = buffers[buffers.length - 1];
+        setBackground(Color.BLACK);
     }
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(WIDTH, HEIGHT);
+        return new Dimension(Frame.WIDTH * SCALE, Frame.HEIGHT * SCALE);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
-        if (currentFrame != null) {
-            for (int y = 0; y < currentFrame.getBackground().length; ++y) {
-                for (int x = 0; x < currentFrame.getBackground()[y].length; ++x) {
-                    paintTile(g, x * 8, y * 8, currentFrame.getBackground()[y][x]);
-                }
-            }
-        }
+        var graphics = (Graphics2D) g;
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        graphics.drawImage(visibleBuffer, 0, 0, getWidth(), getHeight(), null);
     }
 
-    private void paintTile(Graphics g, int x, int y, Tile tile) {
-        for (int yy = 0; yy < 8; ++yy) {
-            for (int xx = 0; xx < 8; ++xx) {
-                g.setColor(getColor(tile.getData()[yy][xx]));
-                g.fillRect(x + xx * SCALE, y + yy * SCALE, SCALE, SCALE);
-            }
-        }
-    }
-
-    private Color getColor(byte value) {
-        return palette[value];
-    }
-
+    /**
+     * Called from the emulation thread. The finished image is handed over to the event dispatch
+     * thread by swapping buffers, so that painting never sees a half written frame.
+     */
     public void setPpuFrame(Frame ppuFrame) {
-        currentFrame = ppuFrame;
+        var target = bufferPixels[backBuffer];
+        var source = ppuFrame.getPixels();
+        for (int i = 0; i < target.length; ++i) {
+            target[i] = SystemPalette.toRgb(source[i]);
+        }
+        visibleBuffer = buffers[backBuffer];
+        backBuffer = (backBuffer + 1) % buffers.length;
+        repaint();
     }
 }

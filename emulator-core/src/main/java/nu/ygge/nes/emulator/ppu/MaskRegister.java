@@ -5,22 +5,19 @@ import java.util.List;
 
 public class MaskRegister {
 
-    private static final short GREYSCALE                = 0b00000001;
-    private static final short LEFTMOST_8PXL_BACKGROUND = 0b00000010;
-    private static final short LEFTMOST_8PXL_SPRITE     = 0b00000100;
-    private static final short SHOW_BACKGROUND          = 0b00001000;
-    private static final short SHOW_SPRITES             = 0b00010000;
-    private static final short EMPHASISE_RED            = 0b00100000;
-    private static final short EMPHASISE_GREEN          = 0b01000000;
-    private static final short EMPHASISE_BLUE           = 0b10000000;
+    private static final int GREYSCALE                = 0b00000001;
+    private static final int LEFTMOST_8PXL_BACKGROUND = 0b00000010;
+    private static final int LEFTMOST_8PXL_SPRITE     = 0b00000100;
+    private static final int SHOW_BACKGROUND          = 0b00001000;
+    private static final int SHOW_SPRITES             = 0b00010000;
+    private static final int EMPHASISE_RED            = 0b00100000;
+    private static final int EMPHASISE_GREEN          = 0b01000000;
+    private static final int EMPHASISE_BLUE           = 0b10000000;
 
-    private short register = 0;
+    private int register = 0;
 
     public void update(byte data) {
-        register = data;
-        if (register < 0) {
-            register += 256;
-        }
+        register = data & 0xff;
     }
 
     public boolean isGrayscale() {

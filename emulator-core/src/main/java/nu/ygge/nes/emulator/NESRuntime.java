@@ -6,11 +6,9 @@ import nu.ygge.nes.emulator.bus.EmulatorBus;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
 import nu.ygge.nes.emulator.cpu.*;
 import nu.ygge.nes.emulator.ppu.Frame;
-import nu.ygge.nes.emulator.ppu.Tile;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Getter
 public class NESRuntime {
@@ -47,15 +45,15 @@ public class NESRuntime {
         var eb1 = extraBytes > 0 ? cpu.readInstruction(bus) : 0;
         var eb2 = extraBytes > 1 ? cpu.readInstruction(bus) : 0;
         operation.perform(this, eb1, eb2);
-        cpu.addCycles(operation.getCycles());
+        cpu.addCycles(operation.getCycles() + bus.consumeStallCycles());
         var newCycles = cpu.getCycles() - cycles;
         cycles += newCycles;
         var result = bus.ppuTick(newCycles * 3);
         if (result == PPUTickResult.NMI) {
             performNMIInterrupt();
-            if (frameConsumer != null) {
-                frameConsumer.accept(bus.getFrame());
-            }
+        }
+        if (result != PPUTickResult.NORMAL && frameConsumer != null) {
+            frameConsumer.accept(bus.getFrame());
         }
     }
 

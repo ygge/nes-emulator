@@ -11,4 +11,11 @@ public interface Bus {
     default Frame getFrame() {
         return null;
     }
+
+    /**
+     * Extra CPU cycles spent on DMA since the last call, which the CPU has to be stalled for.
+     */
+    default int consumeStallCycles() {
+        return 0;
+    }
 }

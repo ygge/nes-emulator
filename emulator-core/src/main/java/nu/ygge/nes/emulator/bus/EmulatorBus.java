@@ -2,21 +2,29 @@ package nu.ygge.nes.emulator.bus;
 
 import lombok.Getter;
 import nu.ygge.nes.emulator.cpu.CPURAM;
-import nu.ygge.nes.emulator.exception.NESException;
 import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.PPU;
 
 @Getter
 public class EmulatorBus implements Bus {
 
+    private static final int PRG_ROM_START = 0x8000;
+    private static final int PRG_RAM_START = 0x6000;
+    private static final int PRG_RAM_SIZE = 0x2000;
+    private static final int OAM_DMA_PAGE_SIZE = 256;
+    private static final int OAM_DMA_CYCLES = 513;
+
     private final CPURAM cpuRam;
     private final PPU ppu;
-    private byte[] prgRom;
+    private final byte[] prgRom;
+    private final byte[] prgRam = new byte[PRG_RAM_SIZE];
+    private final byte[] dmaPage = new byte[OAM_DMA_PAGE_SIZE];
+    private int stallCycles;
 
     public EmulatorBus(byte[] prgRom) {
         cpuRam = new CPURAM();
         ppu = new PPU();
-        this.prgRom = prgRom;
+        this.prgRom = prgRom.length == 0 ? new byte[PRG_ROM_START] : prgRom;
     }
 
     @Override
@@ -24,29 +32,17 @@ public class EmulatorBus implements Bus {
         if (address < 0x2000) {
             // mirroring for CPU RAM
             return cpuRam.read(address & 0x7FF);
-        } else if (address == 0x2000 || address == 0x2001 || address == 0x2003
-                || address == 0x2005 || address == 0x2006 || address == 0x4014) {
-            throw new NESException(String.format("Cannot read from write only registers %d", address));
-        } else if (address == 0x2002) {
-            return ppu.readStatus();
-        } else if (address == 0x2004) {
-            return ppu.readOamData();
-        } else if (address == 0x2007) {
-            return ppu.read();
-        } else if (address <  0x4000) {
+        } else if (address < 0x4000) {
             // mirroring for PPU registers
-            var mirroredAddress = address & 0b00100000_00000111;
-            return read(mirroredAddress);
-        } else if (address <= 0x4015) {
-            // TODO: handle APU
+            return readRegister(0x2000 + (address & 7));
+        } else if (address < PRG_RAM_START) {
+            // TODO: handle APU and input
             return 0;
-        } else if (address == 0x4016 || address == 0x4017) {
-            // TODO: handle input
-            return 0;
-        } else if (address >= 0x8000) {
-            return prgRom[address - 0x8000];
+        } else if (address < PRG_ROM_START) {
+            return prgRam[address - PRG_RAM_START];
         }
-        throw new NESException(String.format("Illegal read address access for %d", address));
+        // a cartridge with a single 16k bank has it mapped into both halves of the ROM area
+        return prgRom[(address - PRG_ROM_START) % prgRom.length];
     }
 
     @Override
@@ -54,38 +50,15 @@ public class EmulatorBus implements Bus {
         if (address < 0x2000) {
             // mirroring for CPU RAM
             cpuRam.write(address & 0x7FF, data);
-        } else if (address == 0x2000) {
-            ppu.writeToControlRegister(data);
-        } else if (address == 0x2001) {
-            ppu.writeToMaskRegister(data);
-        } else if (address == 0x2002) {
-            throw new NESException("Cannot write to status registers 2002");
-        } else if (address == 0x2003) {
-            ppu.writeToOamAddress(data);
-        } else if (address == 0x2004) {
-            ppu.writeToOamData(data);
-        } else if (address == 0x2005) {
-            // write to scroll
-        } else if (address == 0x2006) {
-            ppu.writeToAddressRegister(data);
-        } else if (address == 0x2007) {
-            ppu.write(data);
         } else if (address < 0x4000) {
             // mirroring for PPU registers
-            write(address & 0x2007, data);
-        } else if (address <= 0x4013 || address == 0x4015) {
-            // TODO: handle APU
-            System.out.println("APU not implemented");
+            writeRegister(0x2000 + (address & 7), data);
         } else if (address == 0x4014) {
-            // https://wiki.nesdev.com/w/index.php/PPU_programmer_reference#OAM_DMA_.28.244014.29_.3E_write
-            // TODO: implement this
-            System.out.println("not implemented");
-        } else if (address == 0x4016 || address == 0x4017) {
-            // TODO: handle input
-            System.out.println("input not implemented");
-        } else {
-            throw new NESException(String.format("Illegal write address access for %d", address));
+            performOamDma(data);
+        } else if (address >= PRG_RAM_START && address < PRG_ROM_START) {
+            prgRam[address - PRG_RAM_START] = data;
         }
+        // APU, input and writes to cartridge ROM are ignored for now
     }
 
     @Override
@@ -96,5 +69,44 @@ public class EmulatorBus implements Bus {
     @Override
     public Frame getFrame() {
         return ppu.getFrame();
+    }
+
+    @Override
+    public int consumeStallCycles() {
+        var result = stallCycles;
+        stallCycles = 0;
+        return result;
+    }
+
+    private byte readRegister(int address) {
+        return switch (address) {
+            case 0x2002 -> ppu.readStatus();
+            case 0x2004 -> ppu.readOamData();
+            case 0x2007 -> ppu.read();
+            // the other registers are write only and would return whatever is left on the bus
+            default -> 0;
+        };
+    }
+
+    private void writeRegister(int address, byte data) {
+        switch (address) {
+            case 0x2000 -> ppu.writeToControlRegister(data);
+            case 0x2001 -> ppu.writeToMaskRegister(data);
+            case 0x2003 -> ppu.writeToOamAddress(data);
+            case 0x2004 -> ppu.writeToOamData(data);
+            case 0x2005 -> ppu.writeToScrollRegister(data);
+            case 0x2006 -> ppu.writeToAddressRegister(data);
+            case 0x2007 -> ppu.write(data);
+            default -> { /* the status register is read only */ }
+        }
+    }
+
+    private void performOamDma(byte data) {
+        var base = (data & 0xff) << 8;
+        for (int i = 0; i < OAM_DMA_PAGE_SIZE; ++i) {
+            dmaPage[i] = read(base + i);
+        }
+        ppu.writeOamDma(dmaPage);
+        stallCycles += OAM_DMA_CYCLES;
     }
 }

@@ -1,43 +1,31 @@
 package nu.ygge.nes.emulator.ppu;
 
-import nu.ygge.nes.emulator.cpu.CPUUtil;
-
 public class AddressRegister {
 
-    private final byte[] value = new byte[2];
-    private int currentIndex = 0;
+    private static final int ADDRESS_MASK = 0x3fff;
+
+    private final WriteLatch latch;
+    private int value;
+
+    public AddressRegister(WriteLatch latch) {
+        this.latch = latch;
+    }
 
     public int get() {
-        return CPUUtil.toAddress(value[0], value[1]);
+        return value;
     }
 
-    public void write(byte value) {
-        this.value[currentIndex] = value;
-        currentIndex = 1 - currentIndex;
-        wrapValue();
-    }
-
-    public void add(byte value) {
-        var newValue = (byte)(this.value[1] + value);
-        if (newValue < this.value[1]) {
-            ++this.value[0];
+    public void write(byte data) {
+        if (latch.isSecondWrite()) {
+            value = (value & 0xff00) | (data & 0xff);
+        } else {
+            value = ((data & 0xff) << 8) | (value & 0xff);
         }
-        this.value[1] = newValue;
-        wrapValue();
+        latch.toggle();
+        value &= ADDRESS_MASK;
     }
 
-    public void resetLatch() {
-        currentIndex = 0;
-    }
-
-    private void set(int value) {
-        this.value[0] = (byte)(value >> 8);
-        this.value[1] = (byte)(value&0xFF);
-    }
-
-    private void wrapValue() {
-        if (get() > 0x3fff) {
-            set(get() & 0x3fff);
-        }
+    public void add(int increment) {
+        value = (value + increment) & ADDRESS_MASK;
     }
 }

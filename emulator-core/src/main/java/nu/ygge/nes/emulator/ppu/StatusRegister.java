@@ -2,39 +2,22 @@ package nu.ygge.nes.emulator.ppu;
 
 public class StatusRegister {
 
+    private static final int SPRITE_OVERFLOW = 0b00100000;
+    private static final int SPRITE_ZERO_HIT = 0b01000000;
     private static final int VBLANK_STARTED  = 0b10000000;
 
-    private short register = 0;
-
-    public void update(byte data) {
-        register = data;
-        if (register < 0) {
-            register += 256;
-        }
-    }
+    private int register = 0;
 
     public void setVBlankStatus(boolean status) {
-        if (status) {
-            register &= 0x7f;
-        } else {
-            register |= 0x80;
-        }
+        setFlag(VBLANK_STARTED, status);
     }
 
     public void setSpriteZeroHit(boolean status) {
-        if (status) {
-            register &= 0xbf;
-        } else {
-            register |= 0x40;
-        }
+        setFlag(SPRITE_ZERO_HIT, status);
     }
 
     public void setSpriteOverflow(boolean status) {
-        if (status) {
-            register &= 0xdf;
-        } else {
-            register |= 0x20;
-        }
+        setFlag(SPRITE_OVERFLOW, status);
     }
 
     public void resetVBlankStatus() {
@@ -42,10 +25,18 @@ public class StatusRegister {
     }
 
     public boolean isInVBlankStatus() {
-        return (register & VBLANK_STARTED) == VBLANK_STARTED;
+        return (register & VBLANK_STARTED) != 0;
     }
 
     public byte getSnapshot() {
-        return (byte) (register);
+        return (byte) register;
+    }
+
+    private void setFlag(int mask, boolean status) {
+        if (status) {
+            register |= mask;
+        } else {
+            register &= ~mask;
+        }
     }
 }

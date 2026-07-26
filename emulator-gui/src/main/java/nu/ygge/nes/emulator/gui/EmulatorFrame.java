@@ -1,7 +1,6 @@
 package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.ppu.Frame;
-import nu.ygge.nes.emulator.ppu.Tile;
 
 import javax.swing.*;
 import java.awt.*;

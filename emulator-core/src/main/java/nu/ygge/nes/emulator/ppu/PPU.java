@@ -2,55 +2,75 @@ package nu.ygge.nes.emulator.ppu;
 
 import lombok.Getter;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
-import nu.ygge.nes.emulator.exception.NESException;
+
+import java.util.Arrays;
 
 public class PPU {
 
-    public static final String[][] COLOR_PALETTES = {
-            new String[]{ "626262", "ABABAB", "FFFFFF", "FFFFFF" },
-            new String[]{ "002E98", "0064F4", "4AB5FF", "B6E1FF" },
-            new String[]{ "0C11C2", "353CFF", "858CFF", "CED1FF" },
-            new String[]{ "3B00C2", "761BFF", "C86AFF", "E9C3FF" },
-            new String[]{ "650098", "AE0AF4", "FF58FF", "FFBCFF" },
-            new String[]{ "7D004E", "CF0C8F", "FF5BE2", "FFBDF4" },
-            new String[]{ "7D0000", "CF231C", "FF726A", "FFC6C3" },
-            new String[]{ "651900", "AE4700", "FF9702", "FFD59A" },
-            new String[]{ "3B3600", "766F00", "C8C100", "E9E681" },
-            new String[]{ "0C4F00", "359000", "85E300", "CEF481" },
-            new String[]{ "005B00", "00A100", "4AF502", "B6FB9A" },
-            new String[]{ "005900", "009E1C", "29F26A", "A9FAC3" },
-            new String[]{ "00494E", "00888F", "29DBE2", "A9F0F4" },
-            new String[]{ "000000", "000000", "4E4E4E", "B8B8B8" },
-            new String[]{ "000000", "000000", "000000", "000000" },
-            new String[]{ "000000", "000000", "000000", "000000" },
-    };
+    private static final int CYCLES_PER_SCANLINE = 341;
+    private static final int VISIBLE_SCANLINES = 240;
+    private static final int VBLANK_SCANLINE = 241;
+    private static final int SCANLINES_PER_FRAME = 262;
+    private static final int PATTERN_TABLE_SIZE = 0x2000;
+    private static final int TILE_SIZE = 16;
+    private static final int TILES_PER_ROW = 32;
+    private static final int ATTRIBUTE_TABLE_OFFSET = 0x3c0;
+    private static final int OAM_ENTRIES = 64;
+    private static final int SPRITES_PER_SCANLINE = 8;
+    private static final int SPRITE_PALETTE_OFFSET = 0x10;
+
+    private final WriteLatch writeLatch = new WriteLatch();
+    private final boolean[] backgroundOpaque = new boolean[Frame.WIDTH];
+    private final int[] scanlineSprites = new int[SPRITES_PER_SCANLINE];
 
     @Getter
     private AddressRegister addressRegister;
+    private ScrollRegister scrollRegister;
     private ControlRegister controlRegister;
     private MaskRegister maskRegister;
     private StatusRegister statusRegister;
-    private byte[] paletteTable, vram, oamData, chrRom;
+    private byte[] paletteTable, vram, oamData, patternTable;
+    private boolean patternTableIsRam;
     private Mirroring mirroring;
     private byte dataBuffer;
-    private short oamAddress, scanline;
-    private int cycles;
-    private boolean nmiInterrupt;
+    private int oamAddress, scanline, cycles;
+    private boolean nmiInterrupt, frameComplete;
+    private Frame workingFrame, completedFrame;
+
+    public PPU() {
+        reset(new byte[0], Mirroring.HORIZONTAL);
+    }
 
     public void reset(byte[] chrRom, Mirroring mirroring) {
-        addressRegister = new AddressRegister();
+        writeLatch.reset();
+        addressRegister = new AddressRegister(writeLatch);
+        scrollRegister = new ScrollRegister(writeLatch);
         controlRegister = new ControlRegister();
         maskRegister = new MaskRegister();
         statusRegister = new StatusRegister();
         paletteTable = new byte[32];
         vram = new byte[2048];
         oamData = new byte[256];
-        this.chrRom = chrRom;
+        // a cartridge without CHR ROM brings its own writable pattern table instead
+        patternTableIsRam = chrRom.length == 0;
+        patternTable = chrRom.length >= PATTERN_TABLE_SIZE ? chrRom : Arrays.copyOf(chrRom, PATTERN_TABLE_SIZE);
         this.mirroring = mirroring;
+        workingFrame = new Frame();
+        completedFrame = new Frame();
+        dataBuffer = 0;
+        oamAddress = 0;
+        scanline = 0;
+        cycles = 0;
+        nmiInterrupt = false;
+        frameComplete = false;
     }
 
     public void writeToAddressRegister(byte value) {
         addressRegister.write(value);
+    }
+
+    public void writeToScrollRegister(byte value) {
+        scrollRegister.write(value);
     }
 
     public void writeToControlRegister(byte value) {
@@ -68,18 +88,29 @@ public class PPU {
     public byte readStatus() {
         var data = statusRegister.getSnapshot();
         statusRegister.resetVBlankStatus();
-        addressRegister.resetLatch();
+        writeLatch.reset();
         return data;
     }
 
     public void writeToOamAddress(byte value) {
-        oamAddress = value;
+        oamAddress = value & 0xff;
     }
 
     public void writeToOamData(byte value) {
         oamData[oamAddress] = value;
-        if (++oamAddress == 256) {
-            oamAddress = 0;
+        oamAddress = (oamAddress + 1) & 0xff;
+    }
+
+    public byte readOamData() {
+        return oamData[oamAddress];
+    }
+
+    /**
+     * Bulk transfer of a full CPU page into OAM, starting at the current OAM address.
+     */
+    public void writeOamDma(byte[] page) {
+        for (byte value : page) {
+            writeToOamData(value);
         }
     }
 
@@ -90,120 +121,239 @@ public class PPU {
     public byte read() {
         var address = addressRegister.get();
         incrementVramAddress();
-        if (address <= 0x1fff) {
-            // read from CHR ROM, with delay
+        if (address < 0x2000) {
+            // reads from the pattern table are delayed by one read
             var data = dataBuffer;
-            dataBuffer = chrRom[address];
+            dataBuffer = patternTable[address];
             return data;
-        } else if (address <= 0x2fff) {
-            // read from RAM, with delay
+        } else if (address < 0x3f00) {
+            // reads from the name tables are delayed by one read
             var data = dataBuffer;
             dataBuffer = vram[mirrorVramAddress(address)];
             return data;
-        } else if (address <= 0x3eff) {
-            throw new NESException(String.format("Address %d not expected to be read", address));
-        } else if (address <= 0x3fff) {
-            return paletteTable[address - 0x3eff];
-        } else {
-            throw new NESException(String.format("Address %d not expected to be read", address));
         }
+        // palette reads are immediate, but still fill the buffer with the name table byte underneath
+        dataBuffer = vram[mirrorVramAddress(address)];
+        return paletteTable[paletteIndex(address)];
     }
 
     public void write(byte data) {
         var address = addressRegister.get();
         if (address < 0x2000) {
-            throw new NESException(String.format("Address %d is in CHR ROM, not expected to be written", address));
-        } else if (address < 0x3000) {
-            vram[mirrorVramAddress(address)] = data;
+            if (patternTableIsRam) {
+                patternTable[address] = data;
+            }
         } else if (address < 0x3f00) {
-            throw new NESException(String.format("Address %d should not be written to", address));
-        } else if (address == 0x3f10 || address == 0x3f14 || address == 0x3f18 || address == 0x3f1c) {
-            // these four addresses are mirrors of the same address minus 0x10
-            var mirroredAddress = address - 0x3f10;
-            paletteTable[mirroredAddress] = data;
-        } else if (address < 0x4000) {
-            var mirroredAddress = address - 0x3f00;
-            paletteTable[mirroredAddress] = data;
+            vram[mirrorVramAddress(address)] = data;
         } else {
-            throw new NESException(String.format("Address %d is not expected to be written", address));
+            paletteTable[paletteIndex(address)] = (byte) (data & 0x3f);
         }
         incrementVramAddress();
     }
 
-    public byte readOamData() {
-        return oamData[oamAddress];
-    }
-
     public PPUTickResult tick(int cyclesToAdd) {
         cycles += cyclesToAdd;
-        if (cycles >= 341) {
-            cycles -= 341;
-            ++scanline;
-            if (scanline == 241) {
-                statusRegister.setVBlankStatus(true);
-                statusRegister.setSpriteZeroHit(false);
-                if (controlRegister.canGenerateNMI()) {
-                    return PPUTickResult.NMI;
-                }
-            }
-            if (scanline >= 262) {
-                scanline = 0;
-                statusRegister.setSpriteZeroHit(false);
-                statusRegister.resetVBlankStatus();
-                return PPUTickResult.SCREEN_DONE;
-            }
+        while (cycles >= CYCLES_PER_SCANLINE) {
+            cycles -= CYCLES_PER_SCANLINE;
+            finishScanline();
         }
         if (nmiInterrupt) {
             nmiInterrupt = false;
+            frameComplete = false;
             return PPUTickResult.NMI;
+        }
+        if (frameComplete) {
+            frameComplete = false;
+            return PPUTickResult.SCREEN_DONE;
         }
         return PPUTickResult.NORMAL;
     }
 
     public Frame getFrame() {
-        int bank = controlRegister.getBackgroundPatternAddress();
-        var background = new Tile[30][32];
-        for (int y = 0; y < background.length; y++) {
-            for (int x = 0; x < background[y].length; x++) {
-                var tile = vram[y * background[y].length + x];
-                background[y][x] = getTile(bank, tile);
-            }
-        }
-        return new Frame(background, null);
+        return completedFrame;
     }
 
-    public Tile getTile(int bankAddress, int tileIndex) {
-        var tile = new Tile();
-        for (int i = 0; i < 128; ++i) {
-            int dataIndex = bankAddress + (tileIndex * 16) + i / 8;
-            int x = i % 8;
-            int y = (i % 64) / 8;
-            byte value = (byte)((i / 64 + 1) * getBit(dataIndex, 7 - x));
-            tile.add(x, y, value);
+    private void finishScanline() {
+        if (scanline < VISIBLE_SCANLINES) {
+            renderScanline(scanline);
         }
-        return tile;
+        ++scanline;
+        if (scanline == VBLANK_SCANLINE) {
+            workingFrame.copyTo(completedFrame);
+            frameComplete = true;
+            statusRegister.setVBlankStatus(true);
+            if (controlRegister.canGenerateNMI()) {
+                nmiInterrupt = true;
+            }
+        } else if (scanline >= SCANLINES_PER_FRAME) {
+            scanline = 0;
+            statusRegister.setVBlankStatus(false);
+            statusRegister.setSpriteZeroHit(false);
+            statusRegister.setSpriteOverflow(false);
+        }
+    }
+
+    private void renderScanline(int y) {
+        renderBackground(y);
+        renderSprites(y);
+    }
+
+    private void renderBackground(int y) {
+        var backdrop = toColor(paletteTable[0]);
+        if (!maskRegister.isShowBackground()) {
+            Arrays.fill(backgroundOpaque, false);
+            for (int x = 0; x < Frame.WIDTH; ++x) {
+                workingFrame.setPixel(x, y, backdrop);
+            }
+            return;
+        }
+        var bank = controlRegister.getBackgroundPatternAddress();
+        var sourceY = y + scrollRegister.getY();
+        var baseNameTable = controlRegister.getNameTableAddress();
+        if (sourceY >= VISIBLE_SCANLINES) {
+            sourceY -= VISIBLE_SCANLINES;
+            baseNameTable ^= 0x800;
+        }
+        var tileRow = sourceY >> 3;
+        var fineY = sourceY & 7;
+        int loadedColumn = -1, loadedNameTable = -1;
+        int lowPlane = 0, highPlane = 0, paletteBase = 0;
+        for (int x = 0; x < Frame.WIDTH; ++x) {
+            var sourceX = x + scrollRegister.getX();
+            var nameTable = baseNameTable;
+            if (sourceX >= Frame.WIDTH) {
+                sourceX -= Frame.WIDTH;
+                nameTable ^= 0x400;
+            }
+            var tileColumn = sourceX >> 3;
+            if (tileColumn != loadedColumn || nameTable != loadedNameTable) {
+                loadedColumn = tileColumn;
+                loadedNameTable = nameTable;
+                var tileIndex = vram[mirrorVramAddress(nameTable + tileRow * TILES_PER_ROW + tileColumn)] & 0xff;
+                var patternAddress = bank + tileIndex * TILE_SIZE + fineY;
+                lowPlane = patternTable[patternAddress] & 0xff;
+                highPlane = patternTable[patternAddress + 8] & 0xff;
+                paletteBase = backgroundPaletteBase(nameTable, tileRow, tileColumn);
+            }
+            var bit = 7 - (sourceX & 7);
+            var colorIndex = ((lowPlane >> bit) & 1) | (((highPlane >> bit) & 1) << 1);
+            var opaque = colorIndex != 0 && (x >= 8 || maskRegister.isLeftMost8pxlBackground());
+            backgroundOpaque[x] = opaque;
+            workingFrame.setPixel(x, y, opaque ? toColor(paletteTable[paletteBase + colorIndex]) : backdrop);
+        }
+    }
+
+    private int backgroundPaletteBase(int nameTable, int tileRow, int tileColumn) {
+        var address = nameTable + ATTRIBUTE_TABLE_OFFSET + (tileRow >> 2) * 8 + (tileColumn >> 2);
+        var attribute = vram[mirrorVramAddress(address)] & 0xff;
+        // each attribute byte holds four palette selections, one per 16x16 pixel quadrant
+        var shift = ((tileRow & 2) << 1) | (tileColumn & 2);
+        return ((attribute >> shift) & 3) * 4;
+    }
+
+    private void renderSprites(int y) {
+        if (!maskRegister.isShowSprite()) {
+            return;
+        }
+        var spriteHeight = controlRegister.getSpriteSize();
+        var count = 0;
+        for (int i = 0; i < OAM_ENTRIES; ++i) {
+            var row = y - (oamData[i * 4] & 0xff) - 1;
+            if (row < 0 || row >= spriteHeight) {
+                continue;
+            }
+            if (count == SPRITES_PER_SCANLINE) {
+                statusRegister.setSpriteOverflow(true);
+                break;
+            }
+            scanlineSprites[count++] = i;
+        }
+        // a lower OAM index wins over a higher one, so draw them back to front
+        for (int i = count - 1; i >= 0; --i) {
+            renderSprite(scanlineSprites[i], y, spriteHeight);
+        }
+    }
+
+    private void renderSprite(int index, int y, int spriteHeight) {
+        var spriteY = oamData[index * 4] & 0xff;
+        var tileIndex = oamData[index * 4 + 1] & 0xff;
+        var attributes = oamData[index * 4 + 2] & 0xff;
+        var spriteX = oamData[index * 4 + 3] & 0xff;
+        var behindBackground = (attributes & 0x20) != 0;
+        var flipHorizontally = (attributes & 0x40) != 0;
+        var flipVertically = (attributes & 0x80) != 0;
+        var paletteBase = SPRITE_PALETTE_OFFSET + (attributes & 3) * 4;
+
+        var row = y - spriteY - 1;
+        if (flipVertically) {
+            row = spriteHeight - 1 - row;
+        }
+        int bank, tile;
+        if (spriteHeight == 16) {
+            // a tall sprite picks its bank from the lowest bit of the tile index
+            bank = (tileIndex & 1) * 0x1000;
+            tile = tileIndex & 0xfe;
+            if (row >= 8) {
+                ++tile;
+                row -= 8;
+            }
+        } else {
+            bank = controlRegister.getSpritePatternAddress();
+            tile = tileIndex;
+        }
+        var patternAddress = bank + tile * TILE_SIZE + row;
+        var lowPlane = patternTable[patternAddress] & 0xff;
+        var highPlane = patternTable[patternAddress + 8] & 0xff;
+        for (int x = 0; x < 8; ++x) {
+            var screenX = spriteX + x;
+            if (screenX >= Frame.WIDTH || (screenX < 8 && !maskRegister.isLeftMost8pxlSprite())) {
+                continue;
+            }
+            var bit = flipHorizontally ? x : 7 - x;
+            var colorIndex = ((lowPlane >> bit) & 1) | (((highPlane >> bit) & 1) << 1);
+            if (colorIndex == 0) {
+                continue;
+            }
+            if (index == 0 && backgroundOpaque[screenX] && screenX != Frame.WIDTH - 1) {
+                statusRegister.setSpriteZeroHit(true);
+            }
+            if (behindBackground && backgroundOpaque[screenX]) {
+                continue;
+            }
+            workingFrame.setPixel(screenX, y, toColor(paletteTable[paletteBase + colorIndex]));
+        }
+    }
+
+    private byte toColor(byte paletteEntry) {
+        var color = paletteEntry & 0x3f;
+        if (maskRegister.isGrayscale()) {
+            color &= 0x30;
+        }
+        return (byte) color;
     }
 
     private int mirrorVramAddress(int address) {
-        var mirroredAddress = address & 0b10111111111111;
+        var mirroredAddress = address & 0x2fff;
         var vramIndex = mirroredAddress - 0x2000;
         var nameTable = vramIndex / 0x400;
         if (mirroring == Mirroring.VERTICAL) {
-            if (nameTable == 2 || nameTable == 3) {
+            if (nameTable >= 2) {
                 return vramIndex - 0x800;
             }
-        } else {
-            if (vramIndex == 1 || vramIndex == 2) {
-                return vramIndex - 0x400;
-            } else if (vramIndex == 3) {
-                return vramIndex - 0x800;
-            }
+        } else if (nameTable == 1 || nameTable == 2) {
+            return vramIndex - 0x400;
+        } else if (nameTable == 3) {
+            return vramIndex - 0x800;
         }
         return vramIndex;
     }
 
-    private int getBit(int dataIndex, int index) {
-        int bitMask = 1 << index;
-        return (chrRom[dataIndex] & bitMask) > 0 ? 1 : 0;
+    private static int paletteIndex(int address) {
+        var index = address & 0x1f;
+        // the backdrop entry of each sprite palette mirrors the corresponding background one
+        if (index >= SPRITE_PALETTE_OFFSET && (index & 3) == 0) {
+            index -= SPRITE_PALETTE_OFFSET;
+        }
+        return index;
     }
 }

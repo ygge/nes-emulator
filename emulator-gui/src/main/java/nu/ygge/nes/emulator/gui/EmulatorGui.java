@@ -2,14 +2,20 @@ package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.NESRuntime;
 
+import javax.swing.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 
 public class EmulatorGui {
 
-    public static void main(String[] args) throws IOException {
+    private static final long FRAME_INTERVAL_NANOS = 1_000_000_000L / 60;
+
+    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
         if (args.length != 1) {
             throw new IllegalStateException("Program must be started with path to ROM as only parameter");
         }
@@ -33,14 +39,41 @@ public class EmulatorGui {
         return new FileInputStream(fileName);
     }
 
-    private static void runGame(String fileName, byte[] data) {
-        var frame = new EmulatorFrame(fileName);
-        var runtime = new NESRuntime(frame::setFrame);
+    private static void runGame(String fileName, byte[] data) throws InterruptedException, InvocationTargetException {
+        var created = new AtomicReference<EmulatorFrame>();
+        SwingUtilities.invokeAndWait(() -> created.set(new EmulatorFrame(fileName)));
+        var window = created.get();
+
+        var pacer = new FramePacer();
+        var runtime = new NESRuntime(ppuFrame -> {
+            window.setFrame(ppuFrame);
+            pacer.awaitNextFrame();
+        });
         runtime.loadGame(data);
         runtime.reset();
 
         while (true) {
             runtime.performSingleInstruction();
+        }
+    }
+
+    /**
+     * Holds the emulation back to the speed of a real NES, which is otherwise limited only by how
+     * fast the host can run the instruction loop.
+     */
+    private static final class FramePacer {
+
+        private long nextFrame = System.nanoTime();
+
+        void awaitNextFrame() {
+            nextFrame += FRAME_INTERVAL_NANOS;
+            var remaining = nextFrame - System.nanoTime();
+            if (remaining > 0) {
+                LockSupport.parkNanos(remaining);
+            } else {
+                // we have fallen behind, so start counting from now instead of trying to catch up
+                nextFrame = System.nanoTime();
+            }
         }
     }
 }
