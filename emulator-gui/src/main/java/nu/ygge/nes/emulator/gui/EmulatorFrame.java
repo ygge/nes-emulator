@@ -6,6 +6,7 @@ import nu.ygge.nes.emulator.ppu.Frame;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
 
 public class EmulatorFrame extends JFrame {
 
@@ -27,5 +28,9 @@ public class EmulatorFrame extends JFrame {
 
     public void setFrame(Frame ppuFrame) {
         panel.setPpuFrame(ppuFrame);
+    }
+
+    public BufferedImage screenshot() {
+        return panel.snapshot();
     }
 }

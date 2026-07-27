@@ -5,16 +5,18 @@ import java.awt.event.KeyEvent;
 
 /**
  * The emulator's own keyboard shortcuts, kept apart from the controller bindings: M takes a save
- * state and N brings up a file chooser to load one back.
+ * state, N brings up a file chooser to load one back, and P saves a screenshot.
  */
 class EmulatorHotkeys extends KeyAdapter {
 
     private final Runnable onSave;
     private final Runnable onLoad;
+    private final Runnable onScreenshot;
 
-    EmulatorHotkeys(Runnable onSave, Runnable onLoad) {
+    EmulatorHotkeys(Runnable onSave, Runnable onLoad, Runnable onScreenshot) {
         this.onSave = onSave;
         this.onLoad = onLoad;
+        this.onScreenshot = onScreenshot;
     }
 
     @Override
@@ -22,6 +24,7 @@ class EmulatorHotkeys extends KeyAdapter {
         switch (event.getKeyCode()) {
             case KeyEvent.VK_M -> onSave.run();
             case KeyEvent.VK_N -> onLoad.run();
+            case KeyEvent.VK_P -> onScreenshot.run();
             default -> { /* every other key belongs to the controller */ }
         }
     }

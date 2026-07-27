@@ -41,6 +41,23 @@ public class EmulatorPanel extends JPanel {
     }
 
     /**
+     * A standalone copy of the frame currently on screen, upscaled the same way it is drawn in the
+     * window (nearest neighbour). Copying detaches it from the rotating buffers so it stays intact
+     * even as emulation keeps producing new frames.
+     */
+    public BufferedImage snapshot() {
+        var source = visibleBuffer;
+        var copy = new BufferedImage(source.getWidth() * SCALE, source.getHeight() * SCALE,
+                BufferedImage.TYPE_INT_RGB);
+        var graphics = copy.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        graphics.drawImage(source, 0, 0, copy.getWidth(), copy.getHeight(), null);
+        graphics.dispose();
+        return copy;
+    }
+
+    /**
      * Called from the emulation thread. The finished image is handed over to the event dispatch
      * thread by swapping buffers, so that painting never sees a half written frame.
      */

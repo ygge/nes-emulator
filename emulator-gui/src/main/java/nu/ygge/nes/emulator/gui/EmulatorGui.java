@@ -3,6 +3,7 @@ package nu.ygge.nes.emulator.gui;
 import nu.ygge.nes.emulator.NESRuntime;
 import nu.ygge.nes.emulator.apu.APU;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -69,9 +70,11 @@ public class EmulatorGui {
         // thread carry it out between instructions, where the machine state is consistent
         var saveRequested = new AtomicBoolean();
         var loadRequested = new AtomicReference<File>();
+        // a screenshot only reads the on-screen buffer, so it can run straight on the UI thread
         var hotkeys = new EmulatorHotkeys(
                 () -> saveRequested.set(true),
-                () -> chooseSaveFile().ifPresent(loadRequested::set));
+                () -> chooseSaveFile().ifPresent(loadRequested::set),
+                () -> takeScreenshot(window.get(), fileName));
 
         var controller = runtime.getBus().getController();
         SwingUtilities.invokeAndWait(() -> window.set(new EmulatorFrame(fileName, controller, hotkeys)));
@@ -89,12 +92,22 @@ public class EmulatorGui {
     }
 
     private static void saveState(NESRuntime runtime, String romName, EmulatorFrame frame) {
-        var name = makeSaveFileName(romName);
+        var name = makeFileName(romName, "state");
         try {
             Files.write(Path.of(name), runtime.saveState());
             announce(frame, romName, "sparade " + name);
         } catch (IOException e) {
             showError(frame, "Kunde inte spara: " + e.getMessage());
+        }
+    }
+
+    private static void takeScreenshot(EmulatorFrame frame, String romName) {
+        var name = makeFileName(romName, "png");
+        try {
+            ImageIO.write(frame.screenshot(), "png", new File(name));
+            announce(frame, romName, "screenshot " + name);
+        } catch (IOException e) {
+            showError(frame, "Kunde inte spara screenshot: " + e.getMessage());
         }
     }
 
@@ -108,16 +121,17 @@ public class EmulatorGui {
     }
 
     /**
-     * A file name based on the game and the current time, e.g. {@code mario-20260727-153000.state}.
+     * A file name based on the game, the current time and the given extension, e.g.
+     * {@code mario-20260727-153000.state} or {@code mario-20260727-153000.png}.
      */
-    private static String makeSaveFileName(String romName) {
+    private static String makeFileName(String romName, String extension) {
         var base = new File(romName).getName();
         var dot = base.lastIndexOf('.');
         if (dot > 0) {
             base = base.substring(0, dot);
         }
         var stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-        return base + "-" + stamp + ".state";
+        return base + "-" + stamp + "." + extension;
     }
 
     private static Optional<File> chooseSaveFile() {
