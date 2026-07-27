@@ -28,6 +28,13 @@ public interface Bus {
     }
 
     /**
+     * Whether the cartridge mapper is currently holding the CPU's interrupt line low.
+     */
+    default boolean isMapperIrqAsserted() {
+        return false;
+    }
+
+    /**
      * The audio processing unit, or {@code null} on buses without sound.
      */
     default APU getApu() {

@@ -2,5 +2,7 @@ package nu.ygge.nes.emulator.ppu;
 
 public enum Mirroring {
     VERTICAL,
-    HORIZONTAL
+    HORIZONTAL,
+    SINGLE_SCREEN_LOWER,
+    SINGLE_SCREEN_UPPER
 }

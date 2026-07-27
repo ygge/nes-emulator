@@ -4,15 +4,16 @@ import lombok.Getter;
 import nu.ygge.nes.emulator.apu.APU;
 import nu.ygge.nes.emulator.cpu.CPURAM;
 import nu.ygge.nes.emulator.input.Controller;
+import nu.ygge.nes.emulator.mapper.Mapper;
+import nu.ygge.nes.emulator.mapper.NromMapper;
 import nu.ygge.nes.emulator.ppu.Frame;
+import nu.ygge.nes.emulator.ppu.Mirroring;
 import nu.ygge.nes.emulator.ppu.PPU;
 
 @Getter
 public class EmulatorBus implements Bus {
 
-    private static final int PRG_ROM_START = 0x8000;
-    private static final int PRG_RAM_START = 0x6000;
-    private static final int PRG_RAM_SIZE = 0x2000;
+    private static final int CARTRIDGE_START = 0x4020;
     private static final int OAM_DMA_PAGE_SIZE = 256;
     private static final int OAM_DMA_CYCLES = 513;
     private static final int DMC_DMA_CYCLES = 4;
@@ -23,21 +24,29 @@ public class EmulatorBus implements Bus {
     private final CPURAM cpuRam;
     private final PPU ppu;
     private final APU apu;
+    private final Mapper mapper;
     private final Controller controller = new Controller();
-    private final byte[] prgRom;
-    private final byte[] prgRam = new byte[PRG_RAM_SIZE];
     private final byte[] dmaPage = new byte[OAM_DMA_PAGE_SIZE];
     private int stallCycles;
 
+    /**
+     * Builds a bus around a bare program ROM, wrapping it in the simplest mapper. Handy for tests and
+     * for the many cartridges that need no banking at all.
+     */
     public EmulatorBus(byte[] prgRom) {
+        this(new NromMapper(prgRom, new byte[0], Mirroring.HORIZONTAL));
+    }
+
+    public EmulatorBus(Mapper mapper) {
+        this.mapper = mapper;
         cpuRam = new CPURAM();
         ppu = new PPU();
+        ppu.reset(mapper);
         // the DMC channel fetches samples straight from CPU memory, stalling the CPU as it does
         apu = new APU(address -> {
             stallCycles += DMC_DMA_CYCLES;
             return read(address);
         });
-        this.prgRom = prgRom.length == 0 ? new byte[PRG_ROM_START] : prgRom;
     }
 
     @Override
@@ -52,14 +61,11 @@ public class EmulatorBus implements Bus {
             return apu.readStatus();
         } else if (address == CONTROLLER_ONE) {
             return controller.read();
-        } else if (address < PRG_RAM_START) {
+        } else if (address < CARTRIDGE_START) {
             // the remaining registers, including the second controller port, are not driven yet
             return 0;
-        } else if (address < PRG_ROM_START) {
-            return prgRam[address - PRG_RAM_START];
         }
-        // a cartridge with a single 16k bank has it mapped into both halves of the ROM area
-        return prgRom[(address - PRG_ROM_START) % prgRom.length];
+        return mapper.cpuRead(address);
     }
 
     @Override
@@ -75,12 +81,11 @@ public class EmulatorBus implements Bus {
         } else if (address == CONTROLLER_ONE) {
             // the strobe is shared by both controller ports
             controller.write(data);
-        } else if (address >= 0x4000 && (address <= 0x4013 || address == APU_STATUS || address == APU_FRAME_COUNTER)) {
+        } else if (address <= 0x4013 || address == APU_STATUS || address == APU_FRAME_COUNTER) {
             apu.writeRegister(address, data);
-        } else if (address >= PRG_RAM_START && address < PRG_ROM_START) {
-            prgRam[address - PRG_RAM_START] = data;
+        } else if (address >= CARTRIDGE_START) {
+            mapper.cpuWrite(address, data);
         }
-        // writes to cartridge ROM are ignored
     }
 
     @Override
@@ -91,6 +96,11 @@ public class EmulatorBus implements Bus {
     @Override
     public boolean apuTick(int cycles) {
         return apu.tick(cycles);
+    }
+
+    @Override
+    public boolean isMapperIrqAsserted() {
+        return mapper.isIrqAsserted();
     }
 
     @Override

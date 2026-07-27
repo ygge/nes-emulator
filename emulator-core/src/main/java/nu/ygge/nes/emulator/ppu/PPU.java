@@ -2,6 +2,8 @@ package nu.ygge.nes.emulator.ppu;
 
 import lombok.Getter;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
+import nu.ygge.nes.emulator.mapper.Mapper;
+import nu.ygge.nes.emulator.mapper.NromMapper;
 
 import java.util.Arrays;
 
@@ -11,7 +13,6 @@ public class PPU {
     private static final int VISIBLE_SCANLINES = 240;
     private static final int VBLANK_SCANLINE = 241;
     private static final int SCANLINES_PER_FRAME = 262;
-    private static final int PATTERN_TABLE_SIZE = 0x2000;
     private static final int TILE_SIZE = 16;
     private static final int TILES_PER_ROW = 32;
     private static final int ATTRIBUTE_TABLE_OFFSET = 0x3c0;
@@ -27,9 +28,8 @@ public class PPU {
     private ControlRegister controlRegister;
     private MaskRegister maskRegister;
     private StatusRegister statusRegister;
-    private byte[] paletteTable, vram, oamData, patternTable;
-    private boolean patternTableIsRam;
-    private Mirroring mirroring;
+    private byte[] paletteTable, vram, oamData;
+    private Mapper mapper;
     private byte dataBuffer;
     private int oamAddress, scanline, cycles;
     private boolean nmiInterrupt, frameComplete;
@@ -39,7 +39,15 @@ public class PPU {
         reset(new byte[0], Mirroring.HORIZONTAL);
     }
 
+    /**
+     * Convenience reset around a bare character ROM, which is wrapped in the simplest mapper.
+     */
     public void reset(byte[] chrRom, Mirroring mirroring) {
+        reset(new NromMapper(new byte[0], chrRom, mirroring));
+    }
+
+    public void reset(Mapper mapper) {
+        this.mapper = mapper;
         scrollAddress = new ScrollAddress();
         controlRegister = new ControlRegister();
         maskRegister = new MaskRegister();
@@ -47,10 +55,6 @@ public class PPU {
         paletteTable = new byte[32];
         vram = new byte[2048];
         oamData = new byte[256];
-        // a cartridge without CHR ROM brings its own writable pattern table instead
-        patternTableIsRam = chrRom.length == 0;
-        patternTable = chrRom.length >= PATTERN_TABLE_SIZE ? chrRom : Arrays.copyOf(chrRom, PATTERN_TABLE_SIZE);
-        this.mirroring = mirroring;
         workingFrame = new Frame();
         completedFrame = new Frame();
         dataBuffer = 0;
@@ -121,7 +125,7 @@ public class PPU {
         if (address < 0x2000) {
             // reads from the pattern table are delayed by one read
             var data = dataBuffer;
-            dataBuffer = patternTable[address];
+            dataBuffer = mapper.ppuRead(address);
             return data;
         } else if (address < 0x3f00) {
             // reads from the name tables are delayed by one read
@@ -137,9 +141,7 @@ public class PPU {
     public void write(byte data) {
         var address = scrollAddress.getAddress();
         if (address < 0x2000) {
-            if (patternTableIsRam) {
-                patternTable[address] = data;
-            }
+            mapper.ppuWrite(address, data);
         } else if (address < 0x3f00) {
             vram[mirrorVramAddress(address)] = data;
         } else {
@@ -179,6 +181,8 @@ public class PPU {
             renderScanline(scanline);
             if (isRenderingEnabled()) {
                 scrollAddress.endScanline();
+                // some mappers count scanlines while rendering to time their own interrupt
+                mapper.onScanline();
             }
         }
         ++scanline;
@@ -244,8 +248,8 @@ public class PPU {
                 loadedNameTable = nameTable;
                 var tileIndex = vram[mirrorVramAddress(nameTable + tileRow * TILES_PER_ROW + tileColumn)] & 0xff;
                 var patternAddress = bank + tileIndex * TILE_SIZE + fineY;
-                lowPlane = patternTable[patternAddress] & 0xff;
-                highPlane = patternTable[patternAddress + 8] & 0xff;
+                lowPlane = mapper.ppuRead(patternAddress) & 0xff;
+                highPlane = mapper.ppuRead(patternAddress + 8) & 0xff;
                 paletteBase = backgroundPaletteBase(nameTable, tileRow, tileColumn);
             }
             var bit = 7 - (sourceX & 7);
@@ -315,8 +319,8 @@ public class PPU {
             tile = tileIndex;
         }
         var patternAddress = bank + tile * TILE_SIZE + row;
-        var lowPlane = patternTable[patternAddress] & 0xff;
-        var highPlane = patternTable[patternAddress + 8] & 0xff;
+        var lowPlane = mapper.ppuRead(patternAddress) & 0xff;
+        var highPlane = mapper.ppuRead(patternAddress + 8) & 0xff;
         for (int x = 0; x < 8; ++x) {
             var screenX = spriteX + x;
             if (screenX >= Frame.WIDTH || (screenX < 8 && !maskRegister.isLeftMost8pxlSprite())) {
@@ -346,19 +350,16 @@ public class PPU {
     }
 
     private int mirrorVramAddress(int address) {
-        var mirroredAddress = address & 0x2fff;
-        var vramIndex = mirroredAddress - 0x2000;
+        var vramIndex = (address & 0x2fff) - 0x2000;
         var nameTable = vramIndex / 0x400;
-        if (mirroring == Mirroring.VERTICAL) {
-            if (nameTable >= 2) {
-                return vramIndex - 0x800;
-            }
-        } else if (nameTable == 1 || nameTable == 2) {
-            return vramIndex - 0x400;
-        } else if (nameTable == 3) {
-            return vramIndex - 0x800;
-        }
-        return vramIndex;
+        var offset = vramIndex & 0x3ff;
+        return switch (mapper.getMirroring()) {
+            // the two name tables that share memory depend on the mirroring the cartridge selects
+            case HORIZONTAL -> (nameTable >> 1) * 0x400 + offset;
+            case VERTICAL -> (nameTable & 1) * 0x400 + offset;
+            case SINGLE_SCREEN_LOWER -> offset;
+            case SINGLE_SCREEN_UPPER -> 0x400 + offset;
+        };
     }
 
     private static int paletteIndex(int address) {

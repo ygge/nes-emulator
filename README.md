@@ -14,8 +14,9 @@ The priority order for implementation is roughly the following:
 - [X] Implement instructions set
 - [X] Parse iNES rom-files (mainly header)
 - [X] Emulate clock cycles
-- [ ] Graphics
-- [ ] Sound
+- [X] Graphics
+- [X] Sound
+- [X] Mapper
 
 # Resources used
 

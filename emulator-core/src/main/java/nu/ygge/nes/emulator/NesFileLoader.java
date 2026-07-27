@@ -14,6 +14,7 @@ public final class NesFileLoader {
 
     private final byte[] prgRom, chrRom;
     private final Mirroring mirroring;
+    private final int mapper;
 
     public NesFileLoader(byte[] data) {
         if (data == null || data.length < HEADER_SIZE) {
@@ -25,10 +26,12 @@ public final class NesFileLoader {
         int prgRomSize = data[4] & 0xff;
         int chrRomSize = data[5] & 0xff;
         int controlByte = data[6] & 0xff;
+        int controlByte2 = data[7] & 0xff;
 
         prgRom = new byte[PRG_ROM_BANK_SIZE * prgRomSize];
         chrRom = new byte[CHR_ROM_BANK_SIZE * chrRomSize];
         mirroring = (controlByte & 1) == 1 ? Mirroring.VERTICAL : Mirroring.HORIZONTAL;
+        mapper = readMapperNumber(data, controlByte, controlByte2);
 
         var offset = HEADER_SIZE + ((controlByte & 0b100) != 0 ? TRAINER_SIZE : 0);
         if (data.length < offset + prgRom.length + chrRom.length) {
@@ -36,5 +39,16 @@ public final class NesFileLoader {
         }
         System.arraycopy(data, offset, prgRom, 0, prgRom.length);
         System.arraycopy(data, offset + prgRom.length, chrRom, 0, chrRom.length);
+    }
+
+    /**
+     * The mapper number is split across the two control bytes, but some older dumps left junk in the
+     * upper byte. When the last four header bytes are not all zero the header is one of those, so we
+     * trust only the low nibble.
+     */
+    private static int readMapperNumber(byte[] data, int controlByte, int controlByte2) {
+        var low = controlByte >> 4;
+        var cleanHeader = data[12] == 0 && data[13] == 0 && data[14] == 0 && data[15] == 0;
+        return cleanHeader ? (controlByte2 & 0xf0) | low : low;
     }
 }

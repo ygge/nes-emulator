@@ -5,6 +5,7 @@ import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.bus.EmulatorBus;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
 import nu.ygge.nes.emulator.cpu.*;
+import nu.ygge.nes.emulator.mapper.MapperFactory;
 import nu.ygge.nes.emulator.ppu.Frame;
 
 import java.util.function.BooleanSupplier;
@@ -51,7 +52,7 @@ public class NESRuntime {
         var result = bus.ppuTick(newCycles * 3);
         if (result == PPUTickResult.NMI) {
             performNMIInterrupt();
-        } else if (irq && !cpu.isStatusInterrupt()) {
+        } else if ((irq || bus.isMapperIrqAsserted()) && !cpu.isStatusInterrupt()) {
             performIRQInterrupt();
         }
         if (result != PPUTickResult.NORMAL && frameConsumer != null) {
@@ -74,9 +75,8 @@ public class NESRuntime {
 
     public void loadGame(byte[] fileData) {
         var parsedData = new NesFileLoader(fileData);
-        var emulatorBus = new EmulatorBus(parsedData.getPrgRom());
-        emulatorBus.getPpu().reset(parsedData.getChrRom(), parsedData.getMirroring());
-        loadGame(emulatorBus);
+        var mapper = MapperFactory.create(parsedData);
+        loadGame(new EmulatorBus(mapper));
     }
 
     public void loadGame(Bus bus) {
