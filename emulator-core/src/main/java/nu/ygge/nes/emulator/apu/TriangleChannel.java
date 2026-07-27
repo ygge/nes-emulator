@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * The triangle channel walks a fixed 32-step staircase up and down, producing a triangle wave an
  * octave below a pulse channel of the same period. It has no volume control; a linear counter and a
@@ -21,6 +24,28 @@ public class TriangleChannel {
     private int linearCounterPeriod;
     private int linearCounter;
     private boolean linearCounterReload;
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(timerPeriod);
+        writer.writeInt(timer);
+        writer.writeInt(sequenceStep);
+        writer.writeBoolean(control);
+        writer.writeInt(linearCounterPeriod);
+        writer.writeInt(linearCounter);
+        writer.writeBoolean(linearCounterReload);
+        lengthCounter.saveState(writer);
+    }
+
+    public void loadState(StateReader reader) {
+        timerPeriod = reader.readInt();
+        timer = reader.readInt();
+        sequenceStep = reader.readInt();
+        control = reader.readBoolean();
+        linearCounterPeriod = reader.readInt();
+        linearCounter = reader.readInt();
+        linearCounterReload = reader.readBoolean();
+        lengthCounter.loadState(reader);
+    }
 
     public void writeLinearCounter(byte data) {
         control = (data & 0x80) != 0;

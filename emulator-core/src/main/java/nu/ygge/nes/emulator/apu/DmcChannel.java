@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * The delta modulation channel plays back one bit delta encoded samples fetched from CPU memory.
  * Each incoming bit nudges a seven bit output level up or down by two, which lets games stream short
@@ -34,6 +37,42 @@ public class DmcChannel {
 
     public DmcChannel(DmcMemoryReader memoryReader) {
         this.memoryReader = memoryReader;
+    }
+
+    public void saveState(StateWriter writer) {
+        writer.writeBoolean(irqEnabled);
+        writer.writeBoolean(loop);
+        writer.writeInt(timerPeriod);
+        writer.writeInt(timer);
+        writer.writeInt(outputLevel);
+        writer.writeInt(sampleAddress);
+        writer.writeInt(sampleLength);
+        writer.writeInt(currentAddress);
+        writer.writeInt(bytesRemaining);
+        writer.writeInt(shiftRegister);
+        writer.writeInt(bitsRemaining);
+        writer.writeBoolean(silence);
+        writer.writeBoolean(sampleBufferFilled);
+        writer.writeInt(sampleBuffer);
+        writer.writeBoolean(irqPending);
+    }
+
+    public void loadState(StateReader reader) {
+        irqEnabled = reader.readBoolean();
+        loop = reader.readBoolean();
+        timerPeriod = reader.readInt();
+        timer = reader.readInt();
+        outputLevel = reader.readInt();
+        sampleAddress = reader.readInt();
+        sampleLength = reader.readInt();
+        currentAddress = reader.readInt();
+        bytesRemaining = reader.readInt();
+        shiftRegister = reader.readInt();
+        bitsRemaining = reader.readInt();
+        silence = reader.readBoolean();
+        sampleBufferFilled = reader.readBoolean();
+        sampleBuffer = reader.readInt();
+        irqPending = reader.readBoolean();
     }
 
     public void writeControl(byte data) {

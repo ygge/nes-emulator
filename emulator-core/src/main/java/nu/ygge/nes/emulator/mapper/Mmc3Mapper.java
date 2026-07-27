@@ -1,6 +1,8 @@
 package nu.ygge.nes.emulator.mapper;
 
 import nu.ygge.nes.emulator.ppu.Mirroring;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 /**
  * The Nintendo MMC3 (iNES mapper 4), used by many later games such as Super Mario Bros. 3. It banks
@@ -95,6 +97,44 @@ public class Mmc3Mapper implements Mapper {
         if (irqCounter == 0 && irqEnabled) {
             irqAsserted = true;
         }
+    }
+
+    @Override
+    public void saveState(StateWriter writer) {
+        writer.writeByte(MapperType.MMC3);
+        writer.writeBytes(prgRam);
+        if (chrIsRam) {
+            writer.writeBytes(chr);
+        }
+        for (var register : bankRegisters) {
+            writer.writeInt(register);
+        }
+        writer.writeInt(bankSelect);
+        writer.writeInt(mirroring.ordinal());
+        writer.writeInt(irqLatch);
+        writer.writeInt(irqCounter);
+        writer.writeBoolean(irqReloadPending);
+        writer.writeBoolean(irqEnabled);
+        writer.writeBoolean(irqAsserted);
+    }
+
+    @Override
+    public void loadState(StateReader reader) {
+        MapperType.verify(reader.readUnsignedByte(), MapperType.MMC3);
+        reader.readBytes(prgRam);
+        if (chrIsRam) {
+            reader.readBytes(chr);
+        }
+        for (int i = 0; i < bankRegisters.length; ++i) {
+            bankRegisters[i] = reader.readInt();
+        }
+        bankSelect = reader.readInt();
+        mirroring = Mirroring.values()[reader.readInt()];
+        irqLatch = reader.readInt();
+        irqCounter = reader.readInt();
+        irqReloadPending = reader.readBoolean();
+        irqEnabled = reader.readBoolean();
+        irqAsserted = reader.readBoolean();
     }
 
     private void writeRegister(int address, byte data) {

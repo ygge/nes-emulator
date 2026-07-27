@@ -4,6 +4,8 @@ import lombok.Getter;
 import nu.ygge.nes.emulator.bus.PPUTickResult;
 import nu.ygge.nes.emulator.mapper.Mapper;
 import nu.ygge.nes.emulator.mapper.NromMapper;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 import java.util.Arrays;
 
@@ -63,6 +65,42 @@ public class PPU {
         cycles = 0;
         nmiInterrupt = false;
         frameComplete = false;
+    }
+
+    /**
+     * Captures everything but the pattern tables, which belong to the cartridge and are saved with
+     * it, and the finished picture, which is simply redrawn on the next frame.
+     */
+    public void saveState(StateWriter writer) {
+        writer.writeBytes(paletteTable);
+        writer.writeBytes(vram);
+        writer.writeBytes(oamData);
+        writer.writeByte(dataBuffer);
+        writer.writeInt(oamAddress);
+        writer.writeInt(scanline);
+        writer.writeInt(cycles);
+        writer.writeBoolean(nmiInterrupt);
+        writer.writeBoolean(frameComplete);
+        scrollAddress.saveState(writer);
+        controlRegister.saveState(writer);
+        maskRegister.saveState(writer);
+        statusRegister.saveState(writer);
+    }
+
+    public void loadState(StateReader reader) {
+        reader.readBytes(paletteTable);
+        reader.readBytes(vram);
+        reader.readBytes(oamData);
+        dataBuffer = (byte) reader.readUnsignedByte();
+        oamAddress = reader.readInt();
+        scanline = reader.readInt();
+        cycles = reader.readInt();
+        nmiInterrupt = reader.readBoolean();
+        frameComplete = reader.readBoolean();
+        scrollAddress.loadState(reader);
+        controlRegister.loadState(reader);
+        maskRegister.loadState(reader);
+        statusRegister.loadState(reader);
     }
 
     public void writeToAddressRegister(byte value) {

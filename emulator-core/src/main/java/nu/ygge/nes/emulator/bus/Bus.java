@@ -3,6 +3,8 @@ package nu.ygge.nes.emulator.bus;
 import nu.ygge.nes.emulator.apu.APU;
 import nu.ygge.nes.emulator.input.Controller;
 import nu.ygge.nes.emulator.ppu.Frame;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 public interface Bus {
 
@@ -39,6 +41,15 @@ public interface Bus {
      */
     default APU getApu() {
         return null;
+    }
+
+    /**
+     * Writes everything the bus and the devices behind it need to be restored later.
+     */
+    default void saveState(StateWriter writer) {
+    }
+
+    default void loadState(StateReader reader) {
     }
 
     /**

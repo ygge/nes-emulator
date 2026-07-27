@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * One of the two square wave channels. A pulse is a duty-cycled square wave whose pitch comes from
  * an eleven bit timer, whose volume comes from an {@link Envelope}, and which can slide in pitch
@@ -25,6 +28,26 @@ public class PulseChannel {
 
     public PulseChannel(boolean firstChannel) {
         this.sweep = new Sweep(firstChannel);
+    }
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(duty);
+        writer.writeInt(timerPeriod);
+        writer.writeInt(timer);
+        writer.writeInt(sequenceStep);
+        envelope.saveState(writer);
+        sweep.saveState(writer);
+        lengthCounter.saveState(writer);
+    }
+
+    public void loadState(StateReader reader) {
+        duty = reader.readInt();
+        timerPeriod = reader.readInt();
+        timer = reader.readInt();
+        sequenceStep = reader.readInt();
+        envelope.loadState(reader);
+        sweep.loadState(reader);
+        lengthCounter.loadState(reader);
     }
 
     public void writeControl(byte data) {

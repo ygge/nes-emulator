@@ -1,6 +1,8 @@
 package nu.ygge.nes.emulator.mapper;
 
 import nu.ygge.nes.emulator.ppu.Mirroring;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 /**
  * The Nintendo MMC1 (iNES mapper 1), used by a large slice of the library including the likes of
@@ -80,6 +82,34 @@ public class Mmc1Mapper implements Mapper {
             case 2 -> Mirroring.VERTICAL;
             default -> Mirroring.HORIZONTAL;
         };
+    }
+
+    @Override
+    public void saveState(StateWriter writer) {
+        writer.writeByte(MapperType.MMC1);
+        writer.writeBytes(prgRam);
+        if (chrIsRam) {
+            writer.writeBytes(chr);
+        }
+        writer.writeInt(shiftRegister);
+        writer.writeInt(control);
+        writer.writeInt(chrBank0);
+        writer.writeInt(chrBank1);
+        writer.writeInt(prgBank);
+    }
+
+    @Override
+    public void loadState(StateReader reader) {
+        MapperType.verify(reader.readUnsignedByte(), MapperType.MMC1);
+        reader.readBytes(prgRam);
+        if (chrIsRam) {
+            reader.readBytes(chr);
+        }
+        shiftRegister = reader.readInt();
+        control = reader.readInt();
+        chrBank0 = reader.readInt();
+        chrBank1 = reader.readInt();
+        prgBank = reader.readInt();
     }
 
     private void writeRegister(int address, byte data) {

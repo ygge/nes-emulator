@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 public class ControlRegister {
 
     private static final int VRAM_ADD_INCREMENT     = 0b00000100;
@@ -10,6 +13,14 @@ public class ControlRegister {
     private static final int GENERATE_NMI           = 0b10000000;
 
     private int register = 0;
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(register);
+    }
+
+    public void loadState(StateReader reader) {
+        register = reader.readInt();
+    }
 
     public void update(byte data) {
         register = data & 0xff;

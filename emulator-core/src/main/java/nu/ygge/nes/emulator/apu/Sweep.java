@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * The frequency sweep unit of a pulse channel. Once per half frame it slides the channel timer
  * period up or down by a shifted copy of itself, which either raises or lowers the pitch over time.
@@ -24,6 +27,28 @@ public class Sweep {
      */
     public Sweep(boolean negateAddsOne) {
         this.negateAddsOne = negateAddsOne;
+    }
+
+    public void saveState(StateWriter writer) {
+        writer.writeBoolean(enabled);
+        writer.writeBoolean(negate);
+        writer.writeInt(period);
+        writer.writeInt(shift);
+        writer.writeBoolean(reload);
+        writer.writeInt(divider);
+        writer.writeInt(targetPeriod);
+        writer.writeBoolean(muting);
+    }
+
+    public void loadState(StateReader reader) {
+        enabled = reader.readBoolean();
+        negate = reader.readBoolean();
+        period = reader.readInt();
+        shift = reader.readInt();
+        reload = reader.readBoolean();
+        divider = reader.readInt();
+        targetPeriod = reader.readInt();
+        muting = reader.readBoolean();
     }
 
     public void write(byte data) {

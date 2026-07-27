@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * The scroll position and the video memory address, which the hardware keeps in a single pair of
  * fifteen bit registers instead of separate ones. Writes to $2000, $2005 and $2006 all land in the
@@ -27,6 +30,20 @@ public class ScrollAddress {
 
     private int temporary, current, fineX;
     private boolean secondWrite;
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(temporary);
+        writer.writeInt(current);
+        writer.writeInt(fineX);
+        writer.writeBoolean(secondWrite);
+    }
+
+    public void loadState(StateReader reader) {
+        temporary = reader.readInt();
+        current = reader.readInt();
+        fineX = reader.readInt();
+        secondWrite = reader.readBoolean();
+    }
 
     /**
      * The two name table bits of $2000. They only reach rendering by way of the temporary register,

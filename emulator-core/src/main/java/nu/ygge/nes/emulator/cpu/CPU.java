@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import nu.ygge.nes.emulator.bus.Bus;
 import nu.ygge.nes.emulator.exception.NESException;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 @Getter
 @Setter
@@ -13,6 +15,26 @@ public class CPU {
     private byte accumulator, registerX, registerY, stackPointer;
     private short statusRegister;
     private int cycles;
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(programCounter);
+        writer.writeByte(accumulator);
+        writer.writeByte(registerX);
+        writer.writeByte(registerY);
+        writer.writeByte(stackPointer);
+        writer.writeInt(statusRegister);
+        writer.writeInt(cycles);
+    }
+
+    public void loadState(StateReader reader) {
+        programCounter = reader.readInt();
+        accumulator = (byte) reader.readUnsignedByte();
+        registerX = (byte) reader.readUnsignedByte();
+        registerY = (byte) reader.readUnsignedByte();
+        stackPointer = (byte) reader.readUnsignedByte();
+        statusRegister = (short) reader.readInt();
+        cycles = reader.readInt();
+    }
 
     public void reset() {
         accumulator = 0;

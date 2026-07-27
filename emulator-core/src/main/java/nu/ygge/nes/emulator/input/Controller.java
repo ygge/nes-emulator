@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.input;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * A standard controller. The CPU latches the current button state by pulsing the strobe, and then
  * clocks the buttons out one at a time by reading the same address once per button.
@@ -12,6 +15,20 @@ public class Controller {
     private volatile int pressedButtons;
     private int shiftRegister;
     private boolean strobe;
+
+    /**
+     * The live button state is left out on purpose: it reflects the physical controller, which a
+     * restored snapshot has no business overriding.
+     */
+    public void saveState(StateWriter writer) {
+        writer.writeInt(shiftRegister);
+        writer.writeBoolean(strobe);
+    }
+
+    public void loadState(StateReader reader) {
+        shiftRegister = reader.readInt();
+        strobe = reader.readBoolean();
+    }
 
     public void setPressed(Button button, boolean pressed) {
         pressedButtons = pressed

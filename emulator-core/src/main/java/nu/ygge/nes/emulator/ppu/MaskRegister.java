@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,14 @@ public class MaskRegister {
     private static final int EMPHASISE_BLUE           = 0b10000000;
 
     private int register = 0;
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(register);
+    }
+
+    public void loadState(StateReader reader) {
+        register = reader.readInt();
+    }
 
     public void update(byte data) {
         register = data & 0xff;

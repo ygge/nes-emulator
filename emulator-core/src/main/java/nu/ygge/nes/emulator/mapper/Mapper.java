@@ -1,6 +1,8 @@
 package nu.ygge.nes.emulator.mapper;
 
 import nu.ygge.nes.emulator.ppu.Mirroring;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 /**
  * A cartridge mapper. Real cartridges carry a chip that decides which slice of a larger ROM is
@@ -32,6 +34,14 @@ public interface Mapper {
     void ppuWrite(int address, byte data);
 
     Mirroring getMirroring();
+
+    /**
+     * Saves the mutable cartridge state: any RAM plus the bank and interrupt registers. The read only
+     * ROM is left out, since it is reloaded from the game file.
+     */
+    void saveState(StateWriter writer);
+
+    void loadState(StateReader reader);
 
     /**
      * Whether the mapper is currently holding the CPU's interrupt line low.

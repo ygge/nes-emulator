@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * Silences a channel after a programmable amount of time. Loading a value looks up a duration from a
  * fixed table, and every half frame the counter ticks down towards zero unless it is halted.
@@ -14,6 +17,18 @@ public class LengthCounter {
     private boolean enabled;
     private boolean halt;
     private int counter;
+
+    public void saveState(StateWriter writer) {
+        writer.writeBoolean(enabled);
+        writer.writeBoolean(halt);
+        writer.writeInt(counter);
+    }
+
+    public void loadState(StateReader reader) {
+        enabled = reader.readBoolean();
+        halt = reader.readBoolean();
+        counter = reader.readInt();
+    }
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;

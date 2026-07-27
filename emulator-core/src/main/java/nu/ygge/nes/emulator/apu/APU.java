@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * The Audio Processing Unit. It owns the five sound channels, the frame counter that clocks their
  * envelopes and length counters, and the mixer that folds everything down into a single stream. The
@@ -50,6 +53,48 @@ public class APU {
         // a tenth of a second of headroom is far more than a single frame ever produces
         this.sampleBuffer = new short[sampleRate / 10];
         buildMixerTables();
+    }
+
+    /**
+     * Captures the whole chip but the outgoing sample buffer, which is transient and simply refills
+     * as emulation continues.
+     */
+    public void saveState(StateWriter writer) {
+        pulse1.saveState(writer);
+        pulse2.saveState(writer);
+        triangle.saveState(writer);
+        noise.saveState(writer);
+        dmc.saveState(writer);
+        writer.writeBoolean(fiveStepMode);
+        writer.writeBoolean(irqInhibit);
+        writer.writeBoolean(frameIrq);
+        writer.writeInt(frameCycle);
+        writer.writeBoolean(evenCycle);
+        writer.writeDouble(sampleAccumulator);
+        writer.writeFloat(highPass90);
+        writer.writeFloat(highPass90Prev);
+        writer.writeFloat(highPass440);
+        writer.writeFloat(highPass440Prev);
+        writer.writeFloat(lowPass);
+    }
+
+    public void loadState(StateReader reader) {
+        pulse1.loadState(reader);
+        pulse2.loadState(reader);
+        triangle.loadState(reader);
+        noise.loadState(reader);
+        dmc.loadState(reader);
+        fiveStepMode = reader.readBoolean();
+        irqInhibit = reader.readBoolean();
+        frameIrq = reader.readBoolean();
+        frameCycle = reader.readInt();
+        evenCycle = reader.readBoolean();
+        sampleAccumulator = reader.readDouble();
+        highPass90 = reader.readFloat();
+        highPass90Prev = reader.readFloat();
+        highPass440 = reader.readFloat();
+        highPass440Prev = reader.readFloat();
+        lowPass = reader.readFloat();
     }
 
     public void writeRegister(int address, byte data) {

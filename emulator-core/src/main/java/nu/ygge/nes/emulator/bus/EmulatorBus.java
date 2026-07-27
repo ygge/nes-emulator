@@ -9,6 +9,8 @@ import nu.ygge.nes.emulator.mapper.NromMapper;
 import nu.ygge.nes.emulator.ppu.Frame;
 import nu.ygge.nes.emulator.ppu.Mirroring;
 import nu.ygge.nes.emulator.ppu.PPU;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 @Getter
 public class EmulatorBus implements Bus {
@@ -101,6 +103,26 @@ public class EmulatorBus implements Bus {
     @Override
     public boolean isMapperIrqAsserted() {
         return mapper.isIrqAsserted();
+    }
+
+    @Override
+    public void saveState(StateWriter writer) {
+        cpuRam.saveState(writer);
+        ppu.saveState(writer);
+        apu.saveState(writer);
+        controller.saveState(writer);
+        mapper.saveState(writer);
+        writer.writeInt(stallCycles);
+    }
+
+    @Override
+    public void loadState(StateReader reader) {
+        cpuRam.loadState(reader);
+        ppu.loadState(reader);
+        apu.loadState(reader);
+        controller.loadState(reader);
+        mapper.loadState(reader);
+        stallCycles = reader.readInt();
     }
 
     @Override

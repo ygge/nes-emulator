@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.ppu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 public class StatusRegister {
 
     private static final int SPRITE_OVERFLOW = 0b00100000;
@@ -7,6 +10,14 @@ public class StatusRegister {
     private static final int VBLANK_STARTED  = 0b10000000;
 
     private int register = 0;
+
+    public void saveState(StateWriter writer) {
+        writer.writeInt(register);
+    }
+
+    public void loadState(StateReader reader) {
+        register = reader.readInt();
+    }
 
     public void setVBlankStatus(boolean status) {
         setFlag(VBLANK_STARTED, status);

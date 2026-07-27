@@ -1,5 +1,8 @@
 package nu.ygge.nes.emulator.apu;
 
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
+
 /**
  * The noise channel produces pseudo random tones from a fifteen bit shift register. A short mode
  * taps a different bit so that the sequence repeats far sooner, giving a more tonal, buzzy sound.
@@ -19,6 +22,24 @@ public class NoiseChannel {
     private int timerPeriod;
     private int timer;
     private int shiftRegister = 1;
+
+    public void saveState(StateWriter writer) {
+        writer.writeBoolean(mode);
+        writer.writeInt(timerPeriod);
+        writer.writeInt(timer);
+        writer.writeInt(shiftRegister);
+        envelope.saveState(writer);
+        lengthCounter.saveState(writer);
+    }
+
+    public void loadState(StateReader reader) {
+        mode = reader.readBoolean();
+        timerPeriod = reader.readInt();
+        timer = reader.readInt();
+        shiftRegister = reader.readInt();
+        envelope.loadState(reader);
+        lengthCounter.loadState(reader);
+    }
 
     public void writeControl(byte data) {
         var halt = (data & 0x20) != 0;

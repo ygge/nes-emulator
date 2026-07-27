@@ -4,11 +4,18 @@ import nu.ygge.nes.emulator.NESRuntime;
 import nu.ygge.nes.emulator.apu.APU;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
@@ -58,12 +65,76 @@ public class EmulatorGui {
         // loading the game swapped in the real bus, so grab its audio unit now
         apu.set(runtime.getBus().getApu());
 
+        // the hotkeys fire on the UI thread, so they only flag their intent and let the emulation
+        // thread carry it out between instructions, where the machine state is consistent
+        var saveRequested = new AtomicBoolean();
+        var loadRequested = new AtomicReference<File>();
+        var hotkeys = new EmulatorHotkeys(
+                () -> saveRequested.set(true),
+                () -> chooseSaveFile().ifPresent(loadRequested::set));
+
         var controller = runtime.getBus().getController();
-        SwingUtilities.invokeAndWait(() -> window.set(new EmulatorFrame(fileName, controller)));
+        SwingUtilities.invokeAndWait(() -> window.set(new EmulatorFrame(fileName, controller, hotkeys)));
 
         while (true) {
+            if (saveRequested.getAndSet(false)) {
+                saveState(runtime, fileName, window.get());
+            }
+            var toLoad = loadRequested.getAndSet(null);
+            if (toLoad != null) {
+                loadState(runtime, toLoad, fileName, window.get());
+            }
             runtime.performSingleInstruction();
         }
+    }
+
+    private static void saveState(NESRuntime runtime, String romName, EmulatorFrame frame) {
+        var name = makeSaveFileName(romName);
+        try {
+            Files.write(Path.of(name), runtime.saveState());
+            announce(frame, romName, "sparade " + name);
+        } catch (IOException e) {
+            showError(frame, "Kunde inte spara: " + e.getMessage());
+        }
+    }
+
+    private static void loadState(NESRuntime runtime, File file, String romName, EmulatorFrame frame) {
+        try {
+            runtime.loadState(Files.readAllBytes(file.toPath()));
+            announce(frame, romName, "laddade " + file.getName());
+        } catch (Exception e) {
+            showError(frame, "Kunde inte ladda: " + e.getMessage());
+        }
+    }
+
+    /**
+     * A file name based on the game and the current time, e.g. {@code mario-20260727-153000.state}.
+     */
+    private static String makeSaveFileName(String romName) {
+        var base = new File(romName).getName();
+        var dot = base.lastIndexOf('.');
+        if (dot > 0) {
+            base = base.substring(0, dot);
+        }
+        var stamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        return base + "-" + stamp + ".state";
+    }
+
+    private static Optional<File> chooseSaveFile() {
+        var chooser = new JFileChooser(new File(".").getAbsoluteFile());
+        chooser.setDialogTitle("Välj en sparfil att ladda");
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            return Optional.of(chooser.getSelectedFile());
+        }
+        return Optional.empty();
+    }
+
+    private static void announce(EmulatorFrame frame, String romName, String message) {
+        SwingUtilities.invokeLater(() -> frame.setTitle(romName + "  —  " + message));
+    }
+
+    private static void showError(EmulatorFrame frame, String message) {
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(frame, message, "Fel", JOptionPane.ERROR_MESSAGE));
     }
 
     /**

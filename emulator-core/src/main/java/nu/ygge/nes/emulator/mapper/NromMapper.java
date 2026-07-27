@@ -1,6 +1,8 @@
 package nu.ygge.nes.emulator.mapper;
 
 import nu.ygge.nes.emulator.ppu.Mirroring;
+import nu.ygge.nes.emulator.state.StateReader;
+import nu.ygge.nes.emulator.state.StateWriter;
 
 /**
  * The simplest cartridge (iNES mapper 0): the program ROM is fixed in place with no banking, so a
@@ -60,5 +62,23 @@ public class NromMapper implements Mapper {
     @Override
     public Mirroring getMirroring() {
         return mirroring;
+    }
+
+    @Override
+    public void saveState(StateWriter writer) {
+        writer.writeByte(MapperType.NROM);
+        writer.writeBytes(prgRam);
+        if (chrIsRam) {
+            writer.writeBytes(chr);
+        }
+    }
+
+    @Override
+    public void loadState(StateReader reader) {
+        MapperType.verify(reader.readUnsignedByte(), MapperType.NROM);
+        reader.readBytes(prgRam);
+        if (chrIsRam) {
+            reader.readBytes(chr);
+        }
     }
 }
