@@ -47,9 +47,12 @@ public class NESRuntime {
         cpu.addCycles(operation.getCycles() + bus.consumeStallCycles());
         var newCycles = cpu.getCycles() - cycles;
         cycles += newCycles;
+        var irq = bus.apuTick(newCycles);
         var result = bus.ppuTick(newCycles * 3);
         if (result == PPUTickResult.NMI) {
             performNMIInterrupt();
+        } else if (irq && !cpu.isStatusInterrupt()) {
+            performIRQInterrupt();
         }
         if (result != PPUTickResult.NORMAL && frameConsumer != null) {
             frameConsumer.accept(bus.getFrame());
@@ -81,6 +84,14 @@ public class NESRuntime {
     }
 
     private void performNMIInterrupt() {
+        performInterrupt(InterruptAddress.NMI);
+    }
+
+    private void performIRQInterrupt() {
+        performInterrupt(InterruptAddress.IRQ);
+    }
+
+    private void performInterrupt(InterruptAddress interruptAddress) {
         StackHelper.saveAddressToStack(this, cpu.getProgramCounter());
         var prevStatus = cpu.getStatusRegister();
         cpu.clearStatusBreak();
@@ -89,6 +100,6 @@ public class NESRuntime {
         cpu.setStatusRegister(prevStatus);
         cpu.setStatusInterrupt();
         bus.ppuTick(2 * 3); // this takes two more cycles
-        resetProgramCounter(InterruptAddress.NMI);
+        resetProgramCounter(interruptAddress);
     }
 }

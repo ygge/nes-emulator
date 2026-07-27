@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum InterruptAddress {
     NMI(0xFFFA),
     RESET(0xFFFC),
-    BREAK(0xFFFE);
+    BREAK(0xFFFE),
+    IRQ(0xFFFE);
 
     private final int startAddress;
 

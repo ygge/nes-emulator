@@ -1,6 +1,7 @@
 package nu.ygge.nes.emulator.gui;
 
 import nu.ygge.nes.emulator.NESRuntime;
+import nu.ygge.nes.emulator.apu.APU;
 
 import javax.swing.*;
 import java.io.FileInputStream;
@@ -41,13 +42,21 @@ public class EmulatorGui {
 
     private static void runGame(String fileName, byte[] data) throws InterruptedException, InvocationTargetException {
         var window = new AtomicReference<EmulatorFrame>();
+        var apu = new AtomicReference<APU>();
+        var audio = new AudioPlayer();
         var pacer = new FramePacer();
+        var samples = new short[AudioPlayer.SAMPLE_RATE / 10];
         var runtime = new NESRuntime(ppuFrame -> {
             window.get().setFrame(ppuFrame);
+            if (audio.isActive()) {
+                audio.play(samples, apu.get().readSamples(samples));
+            }
             pacer.awaitNextFrame();
         });
         runtime.loadGame(data);
         runtime.reset();
+        // loading the game swapped in the real bus, so grab its audio unit now
+        apu.set(runtime.getBus().getApu());
 
         var controller = runtime.getBus().getController();
         SwingUtilities.invokeAndWait(() -> window.set(new EmulatorFrame(fileName, controller)));

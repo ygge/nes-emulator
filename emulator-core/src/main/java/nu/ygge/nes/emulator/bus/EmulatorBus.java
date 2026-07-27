@@ -1,6 +1,7 @@
 package nu.ygge.nes.emulator.bus;
 
 import lombok.Getter;
+import nu.ygge.nes.emulator.apu.APU;
 import nu.ygge.nes.emulator.cpu.CPURAM;
 import nu.ygge.nes.emulator.input.Controller;
 import nu.ygge.nes.emulator.ppu.Frame;
@@ -14,10 +15,14 @@ public class EmulatorBus implements Bus {
     private static final int PRG_RAM_SIZE = 0x2000;
     private static final int OAM_DMA_PAGE_SIZE = 256;
     private static final int OAM_DMA_CYCLES = 513;
+    private static final int DMC_DMA_CYCLES = 4;
+    private static final int APU_STATUS = 0x4015;
     private static final int CONTROLLER_ONE = 0x4016;
+    private static final int APU_FRAME_COUNTER = 0x4017;
 
     private final CPURAM cpuRam;
     private final PPU ppu;
+    private final APU apu;
     private final Controller controller = new Controller();
     private final byte[] prgRom;
     private final byte[] prgRam = new byte[PRG_RAM_SIZE];
@@ -27,6 +32,11 @@ public class EmulatorBus implements Bus {
     public EmulatorBus(byte[] prgRom) {
         cpuRam = new CPURAM();
         ppu = new PPU();
+        // the DMC channel fetches samples straight from CPU memory, stalling the CPU as it does
+        apu = new APU(address -> {
+            stallCycles += DMC_DMA_CYCLES;
+            return read(address);
+        });
         this.prgRom = prgRom.length == 0 ? new byte[PRG_ROM_START] : prgRom;
     }
 
@@ -38,10 +48,12 @@ public class EmulatorBus implements Bus {
         } else if (address < 0x4000) {
             // mirroring for PPU registers
             return readRegister(0x2000 + (address & 7));
+        } else if (address == APU_STATUS) {
+            return apu.readStatus();
         } else if (address == CONTROLLER_ONE) {
             return controller.read();
         } else if (address < PRG_RAM_START) {
-            // TODO: handle the APU and the second controller port
+            // the remaining registers, including the second controller port, are not driven yet
             return 0;
         } else if (address < PRG_ROM_START) {
             return prgRam[address - PRG_RAM_START];
@@ -63,15 +75,22 @@ public class EmulatorBus implements Bus {
         } else if (address == CONTROLLER_ONE) {
             // the strobe is shared by both controller ports
             controller.write(data);
+        } else if (address >= 0x4000 && (address <= 0x4013 || address == APU_STATUS || address == APU_FRAME_COUNTER)) {
+            apu.writeRegister(address, data);
         } else if (address >= PRG_RAM_START && address < PRG_ROM_START) {
             prgRam[address - PRG_RAM_START] = data;
         }
-        // the APU and writes to cartridge ROM are ignored for now
+        // writes to cartridge ROM are ignored
     }
 
     @Override
     public PPUTickResult ppuTick(int cycles) {
         return ppu.tick(cycles);
+    }
+
+    @Override
+    public boolean apuTick(int cycles) {
+        return apu.tick(cycles);
     }
 
     @Override
