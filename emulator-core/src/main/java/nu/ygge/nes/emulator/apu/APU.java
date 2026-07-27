@@ -164,14 +164,14 @@ public class APU {
 
     private void clockFrameCounter() {
         ++frameCycle;
-        if (!fiveStepMode) {
-            switch (frameCycle) {
-                case STEP1, STEP3 -> clockQuarterFrame();
-                case STEP2 -> {
-                    clockQuarterFrame();
-                    clockHalfFrame();
-                }
-                case STEP4 -> {
+        switch (frameCycle) {
+            case STEP1, STEP3 -> clockQuarterFrame();
+            case STEP2 -> {
+                clockQuarterFrame();
+                clockHalfFrame();
+            }
+            case STEP4 -> {
+                if (!fiveStepMode) {
                     clockQuarterFrame();
                     clockHalfFrame();
                     if (!irqInhibit) {
@@ -179,22 +179,15 @@ public class APU {
                     }
                     frameCycle = 0;
                 }
-                default -> { /* an ordinary cycle with nothing to clock */ }
             }
-        } else {
-            switch (frameCycle) {
-                case STEP1, STEP3 -> clockQuarterFrame();
-                case STEP2 -> {
-                    clockQuarterFrame();
-                    clockHalfFrame();
-                }
-                case STEP5 -> {
+            case STEP5 -> {
+                if (fiveStepMode) {
                     clockQuarterFrame();
                     clockHalfFrame();
                     frameCycle = 0;
                 }
-                default -> { /* an ordinary cycle with nothing to clock */ }
             }
+            default -> { /* an ordinary cycle with nothing to clock */ }
         }
     }
 

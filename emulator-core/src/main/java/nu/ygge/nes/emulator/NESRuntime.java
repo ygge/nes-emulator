@@ -14,9 +14,9 @@ import java.util.function.Consumer;
 public class NESRuntime {
 
     private final CPU cpu;
+    private final Consumer<Frame> frameConsumer;
     private Bus bus;
     private int cycles;
-    private Consumer<Frame> frameConsumer;
 
     public NESRuntime() {
         this(null);
