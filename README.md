@@ -4,20 +4,6 @@ A NES (Nintendo Entertainment System) emulator written in Java.
 
 Mainly built to teach myself the inner workings of the machine.
 
-The goal of the first version is to be able to play Super Mario Bros and implement what is needed for that. Might add support for more advanced games later.
-
-# WIP
-
-This is very much a work in progress.
-
-The priority order for implementation is roughly the following:
-- [X] Implement instructions set
-- [X] Parse iNES rom-files (mainly header)
-- [X] Emulate clock cycles
-- [X] Graphics
-- [X] Sound
-- [X] Mapper
-
 # Resources used
 
 * https://www.masswerk.at/6502/6502_instruction_set.html

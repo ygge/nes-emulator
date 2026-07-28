@@ -22,8 +22,8 @@ class EmulatorHotkeys extends KeyAdapter {
     @Override
     public void keyPressed(KeyEvent event) {
         switch (event.getKeyCode()) {
-            case KeyEvent.VK_M -> onSave.run();
-            case KeyEvent.VK_N -> onLoad.run();
+            case KeyEvent.VK_K -> onSave.run();
+            case KeyEvent.VK_L -> onLoad.run();
             case KeyEvent.VK_P -> onScreenshot.run();
             default -> { /* every other key belongs to the controller */ }
         }
