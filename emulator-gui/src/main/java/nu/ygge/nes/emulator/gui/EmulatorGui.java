@@ -70,34 +70,44 @@ public class EmulatorGui {
         // thread carry it out between instructions, where the machine state is consistent
         var saveRequested = new AtomicBoolean();
         var loadRequested = new AtomicReference<File>();
+        var quickLoadRequested = new AtomicBoolean();
         // a screenshot only reads the on-screen buffer, so it can run straight on the UI thread
         var hotkeys = new EmulatorHotkeys(
                 () -> saveRequested.set(true),
                 () -> chooseSaveFile().ifPresent(loadRequested::set),
+                () -> quickLoadRequested.set(true),
                 () -> takeScreenshot(window.get(), fileName));
 
         var controller = runtime.getBus().getController();
         SwingUtilities.invokeAndWait(() -> window.set(new EmulatorFrame(fileName, controller, hotkeys)));
 
+        Optional<File> quickLoadFile = Optional.empty();
         while (true) {
             if (saveRequested.getAndSet(false)) {
-                saveState(runtime, fileName, window.get());
+                quickLoadFile = Optional.ofNullable(saveState(runtime, fileName, window.get()));
             }
             var toLoad = loadRequested.getAndSet(null);
             if (toLoad != null) {
+                quickLoadFile = Optional.of(toLoad);
                 loadState(runtime, toLoad, fileName, window.get());
+            }
+            if (quickLoadRequested.getAndSet(false)) {
+                quickLoadFile.ifPresent(file -> loadState(runtime, file, fileName, window.get()));
             }
             runtime.performSingleInstruction();
         }
     }
 
-    private static void saveState(NESRuntime runtime, String romName, EmulatorFrame frame) {
+    private static File saveState(NESRuntime runtime, String romName, EmulatorFrame frame) {
         var name = makeFileName(romName, "state");
         try {
-            Files.write(Path.of(name), runtime.saveState());
+            var path = Path.of(name);
+            Files.write(path, runtime.saveState());
             announce(frame, romName, "sparade " + name);
+            return path.toFile();
         } catch (IOException e) {
             showError(frame, "Kunde inte spara: " + e.getMessage());
+            return null;
         }
     }
 
